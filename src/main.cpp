@@ -32,8 +32,9 @@ using json = nlohmann::json;
 const string SPHERE = "sphere";
 const string PLANE = "plane";
 const string CLOTH = "cloth";
-
-const unordered_set<string> VALID_KEYS = {SPHERE, PLANE, CLOTH};
+const string BOX = "box";
+const string PARTICLES = "particles";
+const unordered_set<string> VALID_KEYS = {SPHERE, PLANE, CLOTH, BOX, PARTICLES};
 
 ClothSimulator *app = nullptr;
 GLFWwindow *window = nullptr;
@@ -186,7 +187,6 @@ bool loadObjectsFromFile(string filename, Cloth *cloth, ClothParameters *cp, vec
       int num_width_points, num_height_points;
       float thickness;
       e_orientation orientation;
-      vector<vector<int>> pinned;
 
       auto it_width = object.find("width");
       if (it_width != object.end()) {
@@ -230,22 +230,12 @@ bool loadObjectsFromFile(string filename, Cloth *cloth, ClothParameters *cp, vec
         incompleteObjectError("cloth", "orientation");
       }
 
-      auto it_pinned = object.find("pinned");
-      if (it_pinned != object.end()) {
-        vector<json> points = *it_pinned;
-        for (auto pt : points) {
-          vector<int> point = pt;
-          pinned.push_back(point);
-        }
-      }
-
       cloth->width = width;
       cloth->height = height;
       cloth->num_width_points = num_width_points;
       cloth->num_height_points = num_height_points;
       cloth->thickness = thickness;
       cloth->orientation = orientation;
-      cloth->pinned = pinned;
 
       // Cloth parameters
       bool enable_structural_constraints, enable_shearing_constraints, enable_bending_constraints;
@@ -327,6 +317,59 @@ bool loadObjectsFromFile(string filename, Cloth *cloth, ClothParameters *cp, vec
 
       Sphere *s = new Sphere(origin, radius, friction, sphere_num_lat, sphere_num_lon);
       objects->push_back(s);
+    } else if (key == BOX) {
+      for (auto face : object) {
+        Vector3D point, normal;
+        double friction;
+
+        auto it_point = face.find("point");
+        if (it_point != face.end()) {
+          vector<double> vec_point = *it_point;
+          point = Vector3D(vec_point[0], vec_point[1], vec_point[2]);
+        } else {
+          incompleteObjectError("plane", "point");
+        }
+
+        auto it_normal = face.find("normal");
+        if (it_normal != face.end()) {
+          vector<double> vec_normal = *it_normal;
+          normal = Vector3D(vec_normal[0], vec_normal[1], vec_normal[2]);
+        } else {
+          incompleteObjectError("plane", "normal");
+        }
+
+        auto it_friction = face.find("friction");
+        if (it_friction != face.end()) {
+          friction = *it_friction;
+        } else {
+          incompleteObjectError("plane", "friction");
+        }
+
+        Plane *p = new Plane(point, normal, friction);
+        objects->push_back(p);
+      }
+    } else if (key == PARTICLES) {
+      int num_particles;
+      auto it_num_particles = object.find("number");
+      if (it_num_particles != object.end()) {
+        num_particles = *it_num_particles;
+      } else {
+        incompleteObjectError("particles", "num particles");
+      }
+      cloth->num_particles = num_particles;
+      auto it_origin = object.find("origin");
+      if (it_origin != object.end()) {
+        vector<double> vec_origin = *it_origin;
+        cloth->center_particles = Vector3D(vec_origin[0], vec_origin[1], vec_origin[2]);
+      } else {
+        incompleteObjectError("particles", "origin");
+      }
+      auto it_friction = object.find("friction");
+      if (it_friction != object.end()) {
+        cloth->particle_friction = *it_friction;
+      } else {
+        incompleteObjectError("particles", "friction");
+      } 
     } else { // PLANE
       Vector3D point, normal;
       double friction;
@@ -471,7 +514,6 @@ int main(int argc, char **argv) {
 
   // Initialize the Cloth object
   cloth.buildGrid();
-  cloth.buildClothMesh();
 
   // Initialize the ClothSimulator object
   app = new ClothSimulator(project_root, screen);

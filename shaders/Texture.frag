@@ -14,8 +14,12 @@ out vec4 out_color;
 
 void main() {
   // YOUR CODE HERE
-  
-  // (Placeholder code. You will want to replace it.)
-  out_color = (vec4(1, 1, 1, 0) + v_normal) / 2;
-  out_color.a = 1;
+  if (v_position[0] == -3) {
+    out_color = vec4(0,0,1,1);
+  } else {
+    // (Placeholder code. You will want to replace it.)
+    out_color = (vec4(1, 1, 1, 0) + v_normal) / 2;
+    out_color.a = 1;
+  }
+
 }

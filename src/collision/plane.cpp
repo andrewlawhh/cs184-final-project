@@ -4,15 +4,24 @@
 #include "../clothMesh.h"
 #include "../clothSimulator.h"
 #include "plane.h"
+#include "particle.h"
 
 using namespace std;
 using namespace CGL;
 
 #define SURFACE_OFFSET 0.0001
 
-void Plane::collide(PointMass &pm) {
+void Plane::collide(Particle &pm) {
   // TODO (Part 3): Handle collisions with planes.
-
+  Vector3D displacement_vector = pm.position - pm.last_position;
+  Vector3D direction = displacement_vector.unit();
+  double t_position = displacement_vector.norm();
+  double t_plane = dot((this->point - pm.last_position), this->normal) / dot(direction, this->normal);
+  if (abs(t_position) >= abs(t_plane)) {
+    Vector3D tangent_point =  pm.last_position + direction * t_plane;
+    Vector3D correction_vector = (tangent_point - pm.last_position) * (1 - SURFACE_OFFSET);
+    pm.position = pm.last_position + correction_vector * (1 - this->friction);
+  }  
 }
 
 void Plane::render(GLShader &shader) {

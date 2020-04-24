@@ -9,6 +9,7 @@
 #include "CGL/misc.h"
 #include "clothMesh.h"
 #include "collision/collisionObject.h"
+#include "collision/particle.h"
 #include "spring.h"
 
 using namespace CGL;
@@ -54,7 +55,7 @@ struct Cloth {
                 vector<CollisionObject *> *collision_objects);
 
   void reset();
-  void buildClothMesh();
+  // void buildClothMesh();
 
   void build_spatial_map();
   void self_collide(PointMass &pm, double simulation_steps);
@@ -69,10 +70,11 @@ struct Cloth {
   e_orientation orientation;
 
   // Cloth components
-  vector<PointMass> point_masses;
-  vector<vector<int>> pinned;
-  vector<Spring> springs;
-  ClothMesh *clothMesh;
+  int num_particles;
+  Vector3D center_particles;
+  double particle_friction;
+  vector<Particle> particles;
+  // ClothMesh *clothMesh;
 
   // Spatial hashing
   unordered_map<float, vector<PointMass *> *> map;
