@@ -15,6 +15,6 @@ void Particle::collide(Particle &p) {
 void Particle::render(GLShader &shader) {
   // We decrease the radius here so flat triangles don't behave strangely
   // and intersect with the sphere when rendered
-  shader.setUniform("u_color", nanogui::Color(0,0,200,200), false);
+  shader.setUniform("u_color", nanogui::Color(28,163,236,200), false);
   m_sphere_mesh.draw_sphere(shader, position, radius * 0.92);
 }
