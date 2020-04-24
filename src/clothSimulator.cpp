@@ -303,9 +303,11 @@ void ClothSimulator::drawContents() {
   }
 
   for (CollisionObject *co : *collision_objects) {
+    //printf("rendering co\n");
     co->render(shader);
   }
-  for (Particle p : cloth->particles) {
+  for (Particle& p : cloth->particles) {
+    //printf("rendering particle\n");
     p.render(shader);
   }
 }

@@ -39,7 +39,7 @@ void Cloth::buildGrid() {
       }
     }
   }
-  printf("num particles generated - %d\n", particles.size());
+  printf("num particles generated - %lu\n", particles.size());
 }
 
 void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
@@ -52,7 +52,12 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
 
 
   // TODO (Part 2): Use Verlet integration to compute new point mass positions
-
+  
+  // THIS IS A TEST FOR SIMPLE GRAVITY. REMOVE.
+  for (Particle& p : particles) {
+    p.last_position = p.position;
+    p.position = p.position - Vector3D(0,.0002,0);
+  }
 
   // TODO (Part 4): Handle self-collisions.
 
