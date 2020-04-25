@@ -26,7 +26,7 @@ public:
   double radius2;
   Vector3D pos_temp; // x_star
   double lambda;
-
+  vector<Particle*> neighbor_ptrs;
   double friction;
   Misc::SphereMesh m_sphere_mesh;
 };

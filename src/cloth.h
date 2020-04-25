@@ -56,7 +56,7 @@ struct Cloth {
 
   void reset();
   // void buildClothMesh();
-
+  void build_neighbor_tree();
   void build_spatial_map();
   void self_collide(PointMass &pm, double simulation_steps);
   float hash_position(Vector3D pos);
@@ -75,6 +75,9 @@ struct Cloth {
   double particle_friction;
   vector<Particle> particles;
   int solver_iterations;
+
+  // octtree? neighbor_tree
+
   // ClothMesh *clothMesh;
 
   // Spatial hashing

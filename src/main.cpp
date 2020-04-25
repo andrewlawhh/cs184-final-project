@@ -241,27 +241,6 @@ bool loadObjectsFromFile(string filename, Cloth *cloth, ClothParameters *cp, vec
       bool enable_structural_constraints, enable_shearing_constraints, enable_bending_constraints;
       double damping, density, ks;
 
-      auto it_enable_structural = object.find("enable_structural");
-      if (it_enable_structural != object.end()) {
-        enable_structural_constraints = *it_enable_structural;
-      } else {
-        incompleteObjectError("cloth", "enable_structural");
-      }
-
-      auto it_enable_shearing = object.find("enable_shearing");
-      if (it_enable_shearing != object.end()) {
-        enable_shearing_constraints = *it_enable_shearing;
-      } else {
-        incompleteObjectError("cloth", "it_enable_shearing");
-      }
-
-      auto it_enable_bending = object.find("enable_bending");
-      if (it_enable_bending != object.end()) {
-        enable_bending_constraints = *it_enable_bending;
-      } else {
-        incompleteObjectError("cloth", "it_enable_bending");
-      }
-
       auto it_damping = object.find("damping");
       if (it_damping != object.end()) {
         damping = *it_damping;

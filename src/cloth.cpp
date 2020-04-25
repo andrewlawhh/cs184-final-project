@@ -51,10 +51,18 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   /*
   Implement PositionBasedFluids paper algorithm
   */
+  // apply gravity (external_accelerations)
+  // predict position pos_temp
   for (Particle& p : particles) {
-    // apply gravity (external_accelerations)
-    // predict position pos_temp
+    for (Vector3D external_accel : external_accelerations) {
+      Vector3D external_force = mass * external_accel;
+      p.velocity += delta_t * external_force;
+    }
+    p.last_position = p.position;
+    p.pos_temp = p.position + delta_t * p.velocity;
   }
+
+  build_neighbor_tree();
   for (Particle& p : particles) {
     // Find neighboring particles
   }
@@ -79,7 +87,12 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     // update velocity
     // apply vorticity confinement and xsph viscosity
     // update position = pos_temp
+    p.position = p.pos_temp;
   }
+}
+
+void Cloth::build_neighbor_tree() {
+
 }
 
 void Cloth::build_spatial_map() {
