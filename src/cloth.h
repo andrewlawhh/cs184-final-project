@@ -17,6 +17,8 @@ using namespace std;
 
 enum e_orientation { HORIZONTAL = 0, VERTICAL = 1 };
 
+const double NN_RADIUS = .2;
+
 struct ClothParameters {
   ClothParameters() {}
   ClothParameters(bool enable_structural_constraints,
@@ -57,6 +59,7 @@ struct Cloth {
   void reset();
   // void buildClothMesh();
   void build_neighbor_tree();
+  void populate_neighbors_fields();
   void build_spatial_map();
   void self_collide(PointMass &pm, double simulation_steps);
   float hash_position(Vector3D pos);
@@ -76,12 +79,18 @@ struct Cloth {
   vector<Particle> particles;
   int solver_iterations;
 
-  // octtree? neighbor_tree
-
+  // kd neighbor_tree
+  vector< vector<Particle*> > neighbors_list;
   // ClothMesh *clothMesh;
 
   // Spatial hashing
   unordered_map<float, vector<PointMass *> *> map;
+
+
+  // Physics functions
+  double poly6(Vector3D r);
+  Vector3D spiky_gradient(Vector3D r);
+
 };
 
 #endif /* CLOTH_H */

@@ -29,6 +29,7 @@ void Cloth::buildGrid() {
   // TODO (Part 1): Build a grid of masses and springs.
   
   // num_particles for each axis
+  // TODO - clean this up
   for (int i = -num_particles/2; i < num_particles/2; i++) {
     for (int j = -num_particles/2; j < num_particles/2; j++) {
       for (int k = -num_particles/2; k < num_particles/2; k++) {
@@ -63,9 +64,8 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   }
 
   build_neighbor_tree();
-  for (Particle& p : particles) {
-    // Find neighboring particles
-  }
+  populate_neighbors_fields();
+
   for (int i = 0; i < solver_iterations; i++) {
     for (Particle& p : particles) {
       // calculate lambda for particle p
@@ -91,8 +91,30 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   }
 }
 
+// rebuild neighbor tree
 void Cloth::build_neighbor_tree() {
+  neighbors_list.clear();
+  neighbors_list.resize(particles.size());
+  // NAIVE APPROACH. REPLACE WITH KD TREE.
+  for (int i = 0; i < particles.size(); i ++) {
+    Particle& p = particles[i];
+    for (int j = 0; j < particles.size(); j++) {
+      if (i == j) continue;
+      Particle& other = particles[j];
+      Vector3D displacement_vector = other.pos_temp - p.pos_temp;
+      if (displacement_vector.norm() < NN_RADIUS) {
+        printf("neighbor added for %d\n", i);
+        neighbors_list[i].push_back(&particles[j]);
+      }
+    }
+  }
+}
 
+// Assign `neighbor_ptrs` in each particle using the list
+void Cloth::populate_neighbors_fields() {
+  for (int i = 0; i < particles.size(); i++) {
+    particles[i].neighbor_ptrs = neighbors_list[i];
+  }
 }
 
 void Cloth::build_spatial_map() {
@@ -127,4 +149,26 @@ void Cloth::reset() {
     p->last_position = p->start_position;
     p++;
   }
+}
+
+// `W` kernel density function
+// https://nccastaff.bournemouth.ac.uk/jmacey/MastersProjects/MSc15/06Burak/BurakErtekinMScThesis.pdf
+double Cloth::poly6(Vector3D r) {
+  double h = NN_RADIUS;
+  double r_norm = r.norm();
+  if (r_norm < 0 || r_norm > h) {
+    return 0;
+  }
+  return (315 / 64 / M_PI / pow(h, 9)) * pow(h*h - r_norm*r_norm, 3);
+}
+
+// Spiky kernel for gradient calculation
+// https://nccastaff.bournemouth.ac.uk/jmacey/MastersProjects/MSc15/06Burak/BurakErtekinMScThesis.pdf
+Vector3D Cloth::spiky_gradient(Vector3D r) {
+  double h = NN_RADIUS;
+  double r_norm = r.norm();
+  if (r_norm < 0 || r_norm > h) {
+    return Vector3D(0);
+  }
+  return -(45 / M_PI / pow(h, 6)) * (r / r_norm) * pow(h - r_norm, 2);
 }
