@@ -48,7 +48,7 @@ void Plane::render(GLShader &shader) {
   normals.col(3) << sNormal;
 
   if (shader.uniform("u_color", false) != -1) {
-    shader.setUniform("u_color", color);
+    shader.setUniform("u_color", nanogui::Color(10,10,10,0));
   }
   shader.uploadAttrib("in_position", positions);
   if (shader.attrib("in_normal", false) != -1) {

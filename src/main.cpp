@@ -370,6 +370,12 @@ bool loadObjectsFromFile(string filename, Cloth *cloth, ClothParameters *cp, vec
       } else {
         incompleteObjectError("particles", "friction");
       } 
+      auto it_solver_iterations = object.find("solver_iterations");
+      if (it_solver_iterations != object.end()) {
+        cloth->solver_iterations = *it_solver_iterations;
+      } else {
+        incompleteObjectError("particles", "solver_iterations");
+      }
     } else { // PLANE
       Vector3D point, normal;
       double friction;

@@ -74,6 +74,7 @@ struct Cloth {
   Vector3D center_particles;
   double particle_friction;
   vector<Particle> particles;
+  int solver_iterations;
   // ClothMesh *clothMesh;
 
   // Spatial hashing

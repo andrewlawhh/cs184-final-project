@@ -24,6 +24,8 @@ public:
   Vector3D forces;
   double radius;
   double radius2;
+  Vector3D pos_temp; // x_star
+  double lambda;
 
   double friction;
   Misc::SphereMesh m_sphere_mesh;

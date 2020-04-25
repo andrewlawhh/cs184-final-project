@@ -45,33 +45,41 @@ void Cloth::buildGrid() {
 void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
                      vector<Vector3D> external_accelerations,
                      vector<CollisionObject *> *collision_objects) {
-  double mass = width * height * cp->density / num_width_points / num_height_points;
+  double mass = 1.0f;
   double delta_t = 1.0f / frames_per_sec / simulation_steps;
 
-  // TODO (Part 2): Compute total force acting on each point mass.
-
-
-  // TODO (Part 2): Use Verlet integration to compute new point mass positions
-  
-  // THIS IS A TEST FOR SIMPLE GRAVITY. REMOVE.
+  /*
+  Implement PositionBasedFluids paper algorithm
+  */
   for (Particle& p : particles) {
-    p.last_position = p.position;
-    p.position = p.position - Vector3D(0,.0002,0);
+    // apply gravity (external_accelerations)
+    // predict position pos_temp
   }
-
-  // TODO (Part 4): Handle self-collisions.
-
-
-  // TODO (Part 3): Handle collisions with other primitives.
   for (Particle& p : particles) {
-    for (CollisionObject* co : *collision_objects) {
-      co->collide(p);
+    // Find neighboring particles
+  }
+  for (int i = 0; i < solver_iterations; i++) {
+    for (Particle& p : particles) {
+      // calculate lambda for particle p
+    }
+    for (Particle& p : particles) {
+      // Calculate delta p for particle p
+      // perform collision detection and response
+      for (Particle& p : particles) {
+        for (CollisionObject* co : *collision_objects) {
+          co->collide(p);
+        }
+      }
+    }
+    for (Particle& p : particles) {
+      // update pos_temp = pos_temp + delta p
     }
   }
-
-  // TODO (Part 2): Constrain the changes to be such that the spring does not change
-  // in length more than 10% per timestep [Provot 1995].
-
+  for (Particle& p : particles) {
+    // update velocity
+    // apply vorticity confinement and xsph viscosity
+    // update position = pos_temp
+  }
 }
 
 void Cloth::build_spatial_map() {
