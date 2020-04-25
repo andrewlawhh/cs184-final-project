@@ -17,7 +17,10 @@ using namespace std;
 
 enum e_orientation { HORIZONTAL = 0, VERTICAL = 1 };
 
+// Physics constants
 const double NN_RADIUS = .2;
+const double REST_DENSITY = 20000;
+const double EPSILON = 5000;
 
 struct ClothParameters {
   ClothParameters() {}
@@ -90,7 +93,11 @@ struct Cloth {
   // Physics functions
   double poly6(Vector3D r);
   Vector3D spiky_gradient(Vector3D r);
-
+  double get_particle_lambda(const Particle& p);
+  double C(const Particle& p);
+  Vector3D gradient_C(const Particle& p, const Particle& k);
+  Vector3D get_delta_p(const Particle& p);
+  double tensile_instability_correction(const Particle& p, const Particle& neighbor);
 };
 
 #endif /* CLOTH_H */

@@ -20,6 +20,7 @@ public:
   Vector3D position;
   Vector3D start_position;
   Vector3D last_position;
+  Vector3D delta_p;
   Vector3D velocity;
   Vector3D forces;
   double radius;

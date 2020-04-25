@@ -13,14 +13,14 @@ using namespace CGL;
 
 void Plane::collide(Particle &pm) {
   // TODO (Part 3): Handle collisions with planes.
-  Vector3D displacement_vector = pm.pos_temp - pm.last_position;
+  Vector3D displacement_vector = pm.pos_temp - pm.position;
   Vector3D direction = displacement_vector.unit();
   double t_position = displacement_vector.norm();
-  double t_plane = dot((this->point - pm.last_position), this->normal) / dot(direction, this->normal);
+  double t_plane = dot((this->point - pm.position), this->normal) / dot(direction, this->normal);
   if (abs(t_position) >= abs(t_plane)) {
-    Vector3D tangent_point =  pm.last_position + direction * t_plane;
-    Vector3D correction_vector = (tangent_point - pm.last_position) * (1 - SURFACE_OFFSET);
-    pm.pos_temp = pm.last_position + correction_vector * (1 - this->friction);
+    Vector3D tangent_point =  pm.position + direction * t_plane;
+    Vector3D correction_vector = (tangent_point - pm.position) * (1 - SURFACE_OFFSET);
+    pm.pos_temp = pm.position + correction_vector * (1 - this->friction);
   }  
 }
 

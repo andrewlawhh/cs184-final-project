@@ -27,16 +27,17 @@ Cloth::~Cloth() {
 
 void Cloth::buildGrid() {
   // TODO (Part 1): Build a grid of masses and springs.
-  
+  double radius = 0.01;
+  double offset = 3 * radius;
   // num_particles for each axis
   // TODO - clean this up
   for (int i = -num_particles/2; i < num_particles/2; i++) {
     for (int j = -num_particles/2; j < num_particles/2; j++) {
       for (int k = -num_particles/2; k < num_particles/2; k++) {
-        Vector3D particle_origin = Vector3D(center_particles[0] + i*0.05,
-                          center_particles[1] + j*0.05,
-                          center_particles[2] + k*0.05);
-        particles.push_back(Particle(particle_origin, 0.005, particle_friction));
+        Vector3D particle_origin = Vector3D(center_particles[0] + i*offset,
+                          center_particles[1] + j*offset,
+                          center_particles[2] + k*offset);
+        particles.push_back(Particle(particle_origin, 0.02, particle_friction));
       }
     }
   }
@@ -52,8 +53,6 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   /*
   Implement PositionBasedFluids paper algorithm
   */
-  // apply gravity (external_accelerations)
-  // predict position pos_temp
   for (Particle& p : particles) {
     for (Vector3D external_accel : external_accelerations) {
       Vector3D external_force = mass * external_accel;
@@ -65,28 +64,27 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
 
   build_neighbor_tree();
   populate_neighbors_fields();
+  // At this line, p.neighbor_ptrs should contain a vector of pointers
+  // to a Particle `p`'s neighboring particles. This is important because
+  // lambda and delta_p are calculated using neighbors.
 
   for (int i = 0; i < solver_iterations; i++) {
     for (Particle& p : particles) {
-      // calculate lambda for particle p
+      p.lambda = get_particle_lambda(p);
     }
     for (Particle& p : particles) {
-      // Calculate delta p for particle p
-      // perform collision detection and response
-      for (Particle& p : particles) {
-        for (CollisionObject* co : *collision_objects) {
-          co->collide(p);
-        }
+      p.delta_p = get_delta_p(p);
+      p.pos_temp += p.delta_p;
+    }
+    for (Particle& p : particles) {
+      for (CollisionObject* co : *collision_objects) {
+        co->collide(p);
       }
-    }
-    for (Particle& p : particles) {
-      // update pos_temp = pos_temp + delta p
     }
   }
   for (Particle& p : particles) {
-    // update velocity
+    p.velocity = (1 / delta_t) * (p.pos_temp - p.position);
     // apply vorticity confinement and xsph viscosity
-    // update position = pos_temp
     p.position = p.pos_temp;
   }
 }
@@ -95,7 +93,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
 void Cloth::build_neighbor_tree() {
   neighbors_list.clear();
   neighbors_list.resize(particles.size());
-  // NAIVE APPROACH. REPLACE WITH KD TREE.
+  // NAIVE APPROACH. REPLACE WITH KD TREE OR SPATIAL MAP
   for (int i = 0; i < particles.size(); i ++) {
     Particle& p = particles[i];
     for (int j = 0; j < particles.size(); j++) {
@@ -103,7 +101,7 @@ void Cloth::build_neighbor_tree() {
       Particle& other = particles[j];
       Vector3D displacement_vector = other.pos_temp - p.pos_temp;
       if (displacement_vector.norm() < NN_RADIUS) {
-        printf("neighbor added for %d\n", i);
+        //printf("neighbor added for %d\n", i);
         neighbors_list[i].push_back(&particles[j]);
       }
     }
@@ -139,7 +137,6 @@ float Cloth::hash_position(Vector3D pos) {
 }
 
 ///////////////////////////////////////////////////////
-/// YOU DO NOT NEED TO REFER TO ANY CODE BELOW THIS ///
 ///////////////////////////////////////////////////////
 
 void Cloth::reset() {
@@ -147,6 +144,10 @@ void Cloth::reset() {
   for (int i = 0; i < particles.size(); i++) {
     p->position = p->start_position;
     p->last_position = p->start_position;
+    p->velocity = 0;
+    p->delta_p = Vector3D(0);
+    p->forces = Vector3D(0);
+    p->lambda = 0;
     p++;
   }
 }
@@ -167,8 +168,60 @@ double Cloth::poly6(Vector3D r) {
 Vector3D Cloth::spiky_gradient(Vector3D r) {
   double h = NN_RADIUS;
   double r_norm = r.norm();
+  if (r_norm == 0) {
+    r_norm = EPS_D;
+  }
   if (r_norm < 0 || r_norm > h) {
     return Vector3D(0);
   }
   return -(45 / M_PI / pow(h, 6)) * (r / r_norm) * pow(h - r_norm, 2);
+}
+
+// Density constraint
+double Cloth::C(const Particle& p) {
+  double rho_i = 0;
+  for (Particle* neighbor_ptr: p.neighbor_ptrs) {
+    rho_i += poly6(p.pos_temp - neighbor_ptr->pos_temp);
+  }
+  return rho_i / REST_DENSITY - 1;
+}
+
+// Gradient of density constraint with respect to pk
+Vector3D Cloth::gradient_C(const Particle& p, const Particle& k) {
+  Vector3D retval = Vector3D(0);
+  for (Particle* neighbor_ptr: p.neighbor_ptrs) {
+    retval += spiky_gradient(p.pos_temp - neighbor_ptr->pos_temp);
+  }
+  retval /= REST_DENSITY;
+  return retval;
+}
+
+// Lambda_i = C / (delta C summed over all k)
+double Cloth::get_particle_lambda(const Particle& p) {
+  double retval = -C(p);
+  double aggregate_gradient_norm2 = 0;
+  for (Particle* neighbor_ptr : p.neighbor_ptrs) {
+    aggregate_gradient_norm2 += gradient_C(p, *neighbor_ptr).norm2();
+  }
+  return - C(p) / (aggregate_gradient_norm2 + EPSILON);
+}
+
+Vector3D Cloth::get_delta_p(const Particle& p) {
+  Vector3D retval = Vector3D(0);
+  for (Particle* neighbor_ptr : p.neighbor_ptrs) {
+    retval += (p.lambda + neighbor_ptr->lambda + tensile_instability_correction(p, *neighbor_ptr)) * 
+      spiky_gradient(p.pos_temp - neighbor_ptr->pos_temp);
+  }
+  retval /= REST_DENSITY;
+  return retval;
+}
+
+// Referenced as s_corr in the paper
+double Cloth::tensile_instability_correction(const Particle& p, const Particle& neighbor) {
+  double k = 0.001; // suggested in the paper
+  int n = 4;      // suggested in the paper
+  Vector3D delta_q = Vector3D(0.11547) * NN_RADIUS; // magic number calculated using heuristic in the paper
+  double numerator = poly6(p.pos_temp - neighbor.pos_temp);
+  double denominator = poly6(delta_q);
+  return -k * pow(numerator / denominator, 4);
 }
