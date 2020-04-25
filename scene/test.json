@@ -6,7 +6,7 @@
       "friction": 0.5
     }],
   "particles": {
-    "number":3,
+    "number":4,
     "origin": [0, 1, 0],
     "friction": 0.3,
     "solver_iterations": 5

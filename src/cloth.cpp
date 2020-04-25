@@ -27,8 +27,8 @@ Cloth::~Cloth() {
 
 void Cloth::buildGrid() {
   // TODO (Part 1): Build a grid of masses and springs.
-  double radius = 0.01;
-  double offset = 3 * radius;
+  double radius = 0.05;
+  double offset = 2 * radius;
   // num_particles for each axis
   // TODO - clean this up
   for (int i = -num_particles/2; i < num_particles/2; i++) {
@@ -84,7 +84,8 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   }
   for (Particle& p : particles) {
     p.velocity = (1 / delta_t) * (p.pos_temp - p.position);
-    // apply vorticity confinement and xsph viscosity
+    apply_vorticity_confinement(p, delta_t);
+    p.velocity += get_viscosity_correction(p);
     p.position = p.pos_temp;
   }
 }
@@ -148,6 +149,7 @@ void Cloth::reset() {
     p->delta_p = Vector3D(0);
     p->forces = Vector3D(0);
     p->lambda = 0;
+    p->omega = Vector3D(0);
     p++;
   }
 }
@@ -218,10 +220,36 @@ Vector3D Cloth::get_delta_p(const Particle& p) {
 
 // Referenced as s_corr in the paper
 double Cloth::tensile_instability_correction(const Particle& p, const Particle& neighbor) {
-  double k = 0.001; // suggested in the paper
+  double k = 0.1; // 0.1 suggested in the paper
   int n = 4;      // suggested in the paper
   Vector3D delta_q = Vector3D(0.11547) * NN_RADIUS; // magic number calculated using heuristic in the paper
   double numerator = poly6(p.pos_temp - neighbor.pos_temp);
   double denominator = poly6(delta_q);
   return -k * pow(numerator / denominator, 4);
+}
+
+void Cloth::apply_vorticity_confinement(Particle& p, double delta_t) {
+  // calculate w
+  Vector3D result_omega = Vector3D(0);
+  for (Particle* neighbor_ptr : p.neighbor_ptrs) {
+    Vector3D velocity_diff = neighbor_ptr->velocity - p.velocity;
+    Vector3D spiky_result = spiky_gradient(p.pos_temp - neighbor_ptr->pos_temp);
+    result_omega += cross(velocity_diff, spiky_result);
+  }
+  Vector3D N = result_omega / result_omega.norm();
+  N.normalize();
+  Vector3D corrective_force = cross(N, result_omega);
+  p.velocity += delta_t * corrective_force;
+}
+
+Vector3D Cloth::get_viscosity_correction(const Particle& p) {
+  double c = 0.0001; // 0.01 suggested in paper
+  Vector3D retval = Vector3D(0);
+  for (Particle* neighbor_ptr : p.neighbor_ptrs) {
+    Vector3D velocity_diff = neighbor_ptr->velocity - p.velocity;
+    double poly6_result = poly6(p.pos_temp - neighbor_ptr->pos_temp);
+    retval += velocity_diff * poly6_result;
+  }
+  retval *= c;
+  return retval;
 }
