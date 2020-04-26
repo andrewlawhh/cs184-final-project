@@ -34,10 +34,10 @@ void Cloth::buildGrid() {
   for (int i = -num_particles/2; i < num_particles/2; i++) {
     for (int j = -num_particles/2; j < num_particles/2; j++) {
       for (int k = -num_particles/2; k < num_particles/2; k++) {
-        Vector3D particle_origin = Vector3D(center_particles[0] + i*offset,
-                          center_particles[1] + j*offset,
-                          center_particles[2] + k*offset);
-        particles.push_back(Particle(particle_origin, 0.02, particle_friction));
+        Vector3D particle_origin = Vector3D(center_particles[0] + i*INIT_OFFSET,
+                          center_particles[1] + j*INIT_OFFSET,
+                          center_particles[2] + k*INIT_OFFSET);
+        particles.push_back(Particle(particle_origin, PARTICLE_RADIUS, particle_friction));
       }
     }
   }
@@ -83,9 +83,9 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     }
   }
   for (Particle& p : particles) {
-    p.velocity = (1 / delta_t) * (p.pos_temp - p.position);
-    apply_vorticity_confinement(p, delta_t);
-    p.velocity += get_viscosity_correction(p);
+    //p.velocity = (1 / delta_t) * (p.pos_temp - p.position);
+    //apply_vorticity_confinement(p, delta_t);
+    //p.velocity += get_viscosity_correction(p);
     p.position = p.pos_temp;
   }
 }
@@ -145,11 +145,13 @@ void Cloth::reset() {
   for (int i = 0; i < particles.size(); i++) {
     p->position = p->start_position;
     p->last_position = p->start_position;
-    p->velocity = 0;
+    p->pos_temp = p->start_position;
+    p->velocity = Vector3D(0);
     p->delta_p = Vector3D(0);
     p->forces = Vector3D(0);
     p->lambda = 0;
     p->omega = Vector3D(0);
+    p->forces = Vector3D(0);
     p++;
   }
 }
@@ -225,7 +227,7 @@ double Cloth::tensile_instability_correction(const Particle& p, const Particle& 
   Vector3D delta_q = Vector3D(0.11547) * NN_RADIUS; // magic number calculated using heuristic in the paper
   double numerator = poly6(p.pos_temp - neighbor.pos_temp);
   double denominator = poly6(delta_q);
-  return -k * pow(numerator / denominator, 4);
+  return -k * pow(numerator / denominator, n);
 }
 
 void Cloth::apply_vorticity_confinement(Particle& p, double delta_t) {
@@ -243,7 +245,7 @@ void Cloth::apply_vorticity_confinement(Particle& p, double delta_t) {
 }
 
 Vector3D Cloth::get_viscosity_correction(const Particle& p) {
-  double c = 0.0001; // 0.01 suggested in paper
+  double c = 0.001; // 0.01 suggested in paper
   Vector3D retval = Vector3D(0);
   for (Particle* neighbor_ptr : p.neighbor_ptrs) {
     Vector3D velocity_diff = neighbor_ptr->velocity - p.velocity;

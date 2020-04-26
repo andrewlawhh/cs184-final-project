@@ -18,9 +18,11 @@ using namespace std;
 enum e_orientation { HORIZONTAL = 0, VERTICAL = 1 };
 
 // Physics constants
-const double NN_RADIUS = 0.15;
-const double REST_DENSITY = 25000;
-const double EPSILON = 5000;
+const double PARTICLE_RADIUS = 0.02;
+const double NN_RADIUS = 4 * PARTICLE_RADIUS;
+const double REST_DENSITY = 5000;
+const double EPSILON = 1.001;
+const double INIT_OFFSET = PARTICLE_RADIUS * 2.5;//pow(4 * pow(PARTICLE_RADIUS,3) * M_PI / 3 / 64, 1/3);
 
 struct ClothParameters {
   ClothParameters() {}
