@@ -62,8 +62,9 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     p.pos_temp = p.position + delta_t * p.velocity;
   }
 
+  build_spatial_map();
   build_neighbor_tree();
-  populate_neighbors_fields();
+  //populate_neighbors_fields();
   // At this line, p.neighbor_ptrs should contain a vector of pointers
   // to a Particle `p`'s neighboring particles. This is important because
   // lambda and delta_p are calculated using neighbors.
@@ -100,15 +101,20 @@ void Cloth::build_neighbor_tree() {
   neighbors_list.clear();
   neighbors_list.resize(particles.size());
   // NAIVE APPROACH. REPLACE WITH KD TREE OR SPATIAL MAP
-  for (int i = 0; i < particles.size(); i ++) {
+  for (int i = 0; i < particles.size(); i++) {
     Particle& p = particles[i];
-    for (int j = 0; j < particles.size(); j++) {
-      if (i == j) continue;
-      Particle& other = particles[j];
-      Vector3D displacement_vector = other.pos_temp - p.pos_temp;
+    vector<Particle*>* candidates = map[hash_position(p.position)];
+    p.neighbor_ptrs = vector<Particle*>();
+    for (Particle* other: *candidates) {
+    //for (int j = 0; j < particles.size(); j++) {
+        //Particle* other = &particles[j];
+      if (&p == other) {
+        continue;
+      }
+      Vector3D displacement_vector = other->pos_temp - p.pos_temp;
       if (displacement_vector.norm() < NN_RADIUS) {
         //printf("neighbor added for %d\n", i);
-        neighbors_list[i].push_back(&particles[j]);
+        p.neighbor_ptrs.push_back(other);
       }
     }
   }
@@ -128,6 +134,16 @@ void Cloth::build_spatial_map() {
   map.clear();
 
   // TODO (Part 4): Build a spatial map out of all of the point masses.
+  for (int i = 0; i < particles.size(); i++) {
+    Particle& p = particles[i];
+    float hash = hash_position(p.position);
+
+    std::unordered_map<float, vector<Particle*>*>::const_iterator res = map.find(hash);
+    if (res == map.end()) {
+      map[hash] = new vector<Particle*>();
+    }
+    map[hash]->push_back(&p);
+  }
 
 }
 
@@ -138,8 +154,14 @@ void Cloth::self_collide(PointMass &pm, double simulation_steps) {
 
 float Cloth::hash_position(Vector3D pos) {
   // TODO (Part 4): Hash a 3D position into a unique float identifier that represents membership in some 3D box volume.
+    double dimension = (num_particles - 1) * NN_RADIUS + 2 * PARTICLE_RADIUS;
+    double box_dimension = 3 * dimension / num_particles;
 
-  return 0.f; 
+    double new_x = pos.x - fmod(pos.x, box_dimension);
+    double new_y = pos.y - fmod(pos.y, box_dimension);
+    double new_z = pos.z - fmod(pos.z, box_dimension);
+
+    return new_x + new_y * dimension + new_z * dimension * dimension;
 }
 
 ///////////////////////////////////////////////////////
@@ -169,7 +191,7 @@ double Cloth::poly6(Vector3D r) {
   if (r_norm < 0 || r_norm > h) {
     return 0;
   }
-  return (315 / 64 / M_PI / pow(h, 9)) * pow(h*h - r_norm*r_norm, 3);
+  return (315 / 64 / PI / pow(h, 9)) * pow(h*h - r_norm*r_norm, 3);
 }
 
 // Spiky kernel for gradient calculation
@@ -183,7 +205,7 @@ Vector3D Cloth::spiky_gradient(Vector3D r) {
   if (r_norm < 0 || r_norm > h) {
     return Vector3D(0);
   }
-  return -(45 / M_PI / pow(h, 6)) * (r / r_norm) * pow(h - r_norm, 2);
+  return -(45 / PI / pow(h, 6)) * (r / r_norm) * pow(h - r_norm, 2);
 }
 
 // Density constraint

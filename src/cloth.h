@@ -89,7 +89,7 @@ struct Cloth {
   // ClothMesh *clothMesh;
 
   // Spatial hashing
-  unordered_map<float, vector<PointMass *> *> map;
+  unordered_map<float, vector<Particle *> *> map;
 
 
   // Physics functions
