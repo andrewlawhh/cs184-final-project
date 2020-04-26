@@ -73,6 +73,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
       p.lambda = get_particle_lambda(p);
     }
     for (Particle& p : particles) {
+      //printf("%f\n", p.lambda);
       p.delta_p = get_delta_p(p);
       p.pos_temp += p.delta_p;
     }
@@ -80,12 +81,16 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
       for (CollisionObject* co : *collision_objects) {
         co->collide(p);
       }
+      for (Particle* neighbor_ptr : p.neighbor_ptrs) {
+        neighbor_ptr->collide(p);
+      }
     }
   }
   for (Particle& p : particles) {
-    //p.velocity = (1 / delta_t) * (p.pos_temp - p.position);
-    //apply_vorticity_confinement(p, delta_t);
-    //p.velocity += get_viscosity_correction(p);
+    p.velocity = (p.pos_temp - p.position) / delta_t;
+    p.old_velocity = p.velocity;
+    // apply_vorticity_confinement(p, delta_t);
+    p.velocity += get_viscosity_correction(p);
     p.position = p.pos_temp;
   }
 }
@@ -207,7 +212,7 @@ double Cloth::get_particle_lambda(const Particle& p) {
   for (Particle* neighbor_ptr : p.neighbor_ptrs) {
     aggregate_gradient_norm2 += gradient_C(p, *neighbor_ptr).norm2();
   }
-  return - C(p) / (aggregate_gradient_norm2 + EPSILON);
+  return - retval / (aggregate_gradient_norm2 + EPSILON);
 }
 
 Vector3D Cloth::get_delta_p(const Particle& p) {
@@ -245,10 +250,10 @@ void Cloth::apply_vorticity_confinement(Particle& p, double delta_t) {
 }
 
 Vector3D Cloth::get_viscosity_correction(const Particle& p) {
-  double c = 0.001; // 0.01 suggested in paper
+  double c = 0.00005; // 0.01 suggested in paper
   Vector3D retval = Vector3D(0);
   for (Particle* neighbor_ptr : p.neighbor_ptrs) {
-    Vector3D velocity_diff = neighbor_ptr->velocity - p.velocity;
+    Vector3D velocity_diff = neighbor_ptr->old_velocity - p.old_velocity;
     double poly6_result = poly6(p.pos_temp - neighbor_ptr->pos_temp);
     retval += velocity_diff * poly6_result;
   }

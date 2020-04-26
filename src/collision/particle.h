@@ -22,6 +22,7 @@ public:
   Vector3D last_position;
   Vector3D delta_p;
   Vector3D velocity;
+  Vector3D old_velocity;
   Vector3D omega;
   Vector3D forces;
   double radius;
