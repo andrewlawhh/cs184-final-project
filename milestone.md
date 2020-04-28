@@ -22,3 +22,8 @@ If we finish this rendering reasonally quickly, we would like to add the ability
 
 2. Work on presentation & deliverables (May 7)
 
+## Video and Presentation Slides
+[Presentation](https://docs.google.com/presentation/d/1AVGYC2m6_7dXv4_j0M80rZT4XRSCF1Swt-rL6er98Zk)
+
+[Video](https://youtu.be/nTayrP6n23Q)
+

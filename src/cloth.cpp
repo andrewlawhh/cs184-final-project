@@ -57,7 +57,6 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   /*
   Implement PositionBasedFluids paper algorithm
   */
-  #pragma omp for
   for (Particle& p : particles) {
     for (Vector3D external_accel : external_accelerations) {
       Vector3D external_force = mass * external_accel;
@@ -75,17 +74,16 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   // lambda and delta_p are calculated using neighbors.
 
   for (int i = 0; i < solver_iterations; i++) {
-    #pragma omp for
     for (Particle& p : particles) {
       p.lambda = get_particle_lambda(p);
     }
-    #pragma omp for
+
     for (Particle& p : particles) {
       //printf("%f\n", p.lambda);
       p.delta_p = get_delta_p(p);
       p.pos_temp += p.delta_p;
     }
-    #pragma omp for
+
     for (Particle& p : particles) {
       for (CollisionObject* co : *collision_objects) {
         co->collide(p);
@@ -95,7 +93,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
       }
     }
   }
-  #pragma omp for
+ 
   for (Particle& p : particles) {
     p.velocity = (p.pos_temp - p.position) / delta_t;
     p.old_velocity = p.velocity;
@@ -109,7 +107,6 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
 void Cloth::build_neighbor_tree() {
   neighbors_list.clear();
   neighbors_list.resize(particles.size());
-  #pragma omp for
   for (int i = 0; i < particles.size(); i++) {
     Particle& p = particles[i];
     p.neighbor_ptrs = vector<Particle*>();
@@ -118,11 +115,8 @@ void Cloth::build_neighbor_tree() {
     double x = get<0>(contained);
     double y = get<1>(contained);
     double z = get<2>(contained);
-    #pragma omp for
     for (int diff_x = -1; diff_x <= 1; diff_x++) {
-        #pragma omp for
         for (int diff_y = -1; diff_y <= 1; diff_y++) {
-            #pragma omp for
             for (int diff_z = -1; diff_z <= 1; diff_z++) {
                 tuple<double, double, double> neighbor_box = make_tuple(x + diff_x * box_dimension, y + diff_y * box_dimension, z + diff_z * box_dimension);
                 float hash = hash_tuple(neighbor_box);
@@ -166,7 +160,6 @@ void Cloth::build_spatial_map() {
   map.clear();
 
   // TODO (Part 4): Build a spatial map out of all of the point masses.
-#pragma omp
   for (int i = 0; i < particles.size(); i++) {
     Particle& p = particles[i];
     tuple<double, double, double> contained = contained_box(p.pos_temp);
