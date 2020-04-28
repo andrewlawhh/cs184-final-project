@@ -32,6 +32,8 @@ public:
   vector<Particle*> neighbor_ptrs;
   double friction;
   Misc::SphereMesh m_sphere_mesh;
+
+  int count;
 };
 
 #endif /* COLLISIONOBJECT_PARTICLE_H */

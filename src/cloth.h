@@ -64,10 +64,10 @@ struct Cloth {
   void reset();
   // void buildClothMesh();
   void build_neighbor_tree();
-  void populate_neighbors_fields();
   void build_spatial_map();
   void self_collide(PointMass &pm, double simulation_steps);
-  float hash_position(Vector3D pos);
+  tuple<double, double, double> contained_box(Vector3D pos);
+  float hash_tuple(tuple<double, double, double>);
 
   // Cloth properties
   double width;
@@ -90,6 +90,7 @@ struct Cloth {
 
   // Spatial hashing
   unordered_map<float, vector<Particle *> *> map;
+  double box_dimension;
 
 
   // Physics functions

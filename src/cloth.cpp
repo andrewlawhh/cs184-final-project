@@ -37,22 +37,27 @@ void Cloth::buildGrid() {
         Vector3D particle_origin = Vector3D(center_particles[0] + i*INIT_OFFSET,
                           center_particles[1] + j*INIT_OFFSET,
                           center_particles[2] + k*INIT_OFFSET);
-        particles.push_back(Particle(particle_origin, PARTICLE_RADIUS, particle_friction));
+        Particle p = Particle(particle_origin, PARTICLE_RADIUS, particle_friction);
+        particles.push_back(p);
       }
     }
   }
   printf("num particles generated - %lu\n", particles.size());
+  double dimension = (num_particles - 1) * NN_RADIUS + 2 * PARTICLE_RADIUS;
+  box_dimension = NN_RADIUS;
 }
 
 void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParameters *cp,
                      vector<Vector3D> external_accelerations,
                      vector<CollisionObject *> *collision_objects) {
+
   double mass = 1.0f;
   double delta_t = 1.0f / frames_per_sec / simulation_steps;
 
   /*
   Implement PositionBasedFluids paper algorithm
   */
+  #pragma omp for
   for (Particle& p : particles) {
     for (Vector3D external_accel : external_accelerations) {
       Vector3D external_force = mass * external_accel;
@@ -70,14 +75,17 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   // lambda and delta_p are calculated using neighbors.
 
   for (int i = 0; i < solver_iterations; i++) {
+    #pragma omp for
     for (Particle& p : particles) {
       p.lambda = get_particle_lambda(p);
     }
+    #pragma omp for
     for (Particle& p : particles) {
       //printf("%f\n", p.lambda);
       p.delta_p = get_delta_p(p);
       p.pos_temp += p.delta_p;
     }
+    #pragma omp for
     for (Particle& p : particles) {
       for (CollisionObject* co : *collision_objects) {
         co->collide(p);
@@ -87,6 +95,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
       }
     }
   }
+  #pragma omp for
   for (Particle& p : particles) {
     p.velocity = (p.pos_temp - p.position) / delta_t;
     p.old_velocity = p.velocity;
@@ -100,30 +109,53 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
 void Cloth::build_neighbor_tree() {
   neighbors_list.clear();
   neighbors_list.resize(particles.size());
-  // NAIVE APPROACH. REPLACE WITH KD TREE OR SPATIAL MAP
+  #pragma omp for
   for (int i = 0; i < particles.size(); i++) {
     Particle& p = particles[i];
-    vector<Particle*>* candidates = map[hash_position(p.position)];
     p.neighbor_ptrs = vector<Particle*>();
-    for (Particle* other: *candidates) {
-    //for (int j = 0; j < particles.size(); j++) {
-        //Particle* other = &particles[j];
-      if (&p == other) {
-        continue;
-      }
-      Vector3D displacement_vector = other->pos_temp - p.pos_temp;
-      if (displacement_vector.norm() < NN_RADIUS) {
-        //printf("neighbor added for %d\n", i);
-        p.neighbor_ptrs.push_back(other);
-      }
-    }
-  }
-}
 
-// Assign `neighbor_ptrs` in each particle using the list
-void Cloth::populate_neighbors_fields() {
-  for (int i = 0; i < particles.size(); i++) {
-    particles[i].neighbor_ptrs = neighbors_list[i];
+    tuple<double, double, double> contained = contained_box(p.pos_temp);
+    double x = get<0>(contained);
+    double y = get<1>(contained);
+    double z = get<2>(contained);
+    #pragma omp for
+    for (int diff_x = -1; diff_x <= 1; diff_x++) {
+        #pragma omp for
+        for (int diff_y = -1; diff_y <= 1; diff_y++) {
+            #pragma omp for
+            for (int diff_z = -1; diff_z <= 1; diff_z++) {
+                tuple<double, double, double> neighbor_box = make_tuple(x + diff_x * box_dimension, y + diff_y * box_dimension, z + diff_z * box_dimension);
+                float hash = hash_tuple(neighbor_box);
+                std::unordered_map<float, vector<Particle*>*>::const_iterator res = map.find(hash);
+                if (res != map.end()) {
+                    vector<Particle*>* close = map[hash];
+                    for (Particle* other : *close) {
+                        if (&p == other) {
+                            continue;
+                        }
+                        Vector3D displacement_vector = other->pos_temp - p.pos_temp;
+                        if (displacement_vector.norm() < NN_RADIUS) {
+                            p.neighbor_ptrs.push_back(other);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    /*
+    // BRUTE FORCE
+    for (int j = 0; j < particles.size(); j++) {
+        Particle* other = &particles[j];
+        if (&p == other) {
+            continue;
+        }
+        Vector3D displacement_vector = other->pos_temp - p.pos_temp;
+        if (displacement_vector.norm() < NN_RADIUS) {
+            //printf("neighbor added for %d\n", i);
+            p.neighbor_ptrs.push_back(other);
+        }
+    } */
   }
 }
 
@@ -134,9 +166,11 @@ void Cloth::build_spatial_map() {
   map.clear();
 
   // TODO (Part 4): Build a spatial map out of all of the point masses.
+#pragma omp
   for (int i = 0; i < particles.size(); i++) {
     Particle& p = particles[i];
-    float hash = hash_position(p.position);
+    tuple<double, double, double> contained = contained_box(p.pos_temp);
+    float hash = hash_tuple(contained);
 
     std::unordered_map<float, vector<Particle*>*>::const_iterator res = map.find(hash);
     if (res == map.end()) {
@@ -152,16 +186,18 @@ void Cloth::self_collide(PointMass &pm, double simulation_steps) {
 
 }
 
-float Cloth::hash_position(Vector3D pos) {
+tuple<double, double, double> Cloth::contained_box(Vector3D pos) {
   // TODO (Part 4): Hash a 3D position into a unique float identifier that represents membership in some 3D box volume.
-    double dimension = (num_particles - 1) * NN_RADIUS + 2 * PARTICLE_RADIUS;
-    double box_dimension = 3 * dimension / num_particles;
 
     double new_x = pos.x - fmod(pos.x, box_dimension);
     double new_y = pos.y - fmod(pos.y, box_dimension);
     double new_z = pos.z - fmod(pos.z, box_dimension);
 
-    return new_x + new_y * dimension + new_z * dimension * dimension;
+    return make_tuple(new_x, new_y, new_z);
+}
+
+float Cloth::hash_tuple(tuple<double, double, double> t) {
+    return get<0>(t) + get<1>(t) * 31 + get<2>(t) * 31 * 31;
 }
 
 ///////////////////////////////////////////////////////
