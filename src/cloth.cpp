@@ -54,6 +54,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   double mass = 1.0f;
   //double delta_t = 1.0f / frames_per_sec / simulation_steps;
   double delta_t = 0.0083;
+  //printf("%f", 1.0 / frames_per_sec / simulation_steps);
 
   /*
   Implement PositionBasedFluids paper algorithm
@@ -124,14 +125,16 @@ void Cloth::build_neighbor_tree() {
                 std::unordered_map<float, vector<Particle*>*>::const_iterator res = map.find(hash);
                 if (res != map.end()) {
                     vector<Particle*>* close = map[hash];
-                    for (Particle* other : *close) {
-                        if (&p == other) {
-                            continue;
-                        }
-                        Vector3D displacement_vector = other->pos_temp - p.pos_temp;
-                        if (displacement_vector.norm() < NN_RADIUS) {
-                            p.neighbor_ptrs.push_back(other);
-                        }
+                    if (close != NULL) {
+                      for (Particle* other : *close) {
+                          if (&p == other) {
+                              continue;
+                          }
+                          Vector3D displacement_vector = other->pos_temp - p.pos_temp;
+                          if (displacement_vector.norm() < NN_RADIUS) {
+                              p.neighbor_ptrs.push_back(other);
+                          }
+                      }
                     }
                 }
             }
@@ -166,17 +169,12 @@ void Cloth::build_spatial_map() {
     tuple<double, double, double> contained = contained_box(p.pos_temp);
     float hash = hash_tuple(contained);
 
-    std::unordered_map<float, vector<Particle*>*>::const_iterator res = map.find(hash);
+    auto res = map.find(hash);
     if (res == map.end()) {
       map[hash] = new vector<Particle*>();
     }
     map[hash]->push_back(&p);
   }
-
-}
-
-void Cloth::self_collide(PointMass &pm, double simulation_steps) {
-  // TODO (Part 4): Handle self-collision for a given point mass.
 
 }
 

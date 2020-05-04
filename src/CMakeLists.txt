@@ -16,10 +16,10 @@ set(CLOTHSIM_VIEWER_SOURCE
     clothSimulator.cpp
 
     # Miscellaneous
-    # png.cpp
     misc/sphere_drawing.cpp
     misc/file_utils.cpp
-
+    misc/stb_image_write.h
+    
     # Camera
     camera.cpp
 )

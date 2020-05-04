@@ -40,6 +40,7 @@ private:
   void drawNormals(GLShader &shader);
   void drawPhong(GLShader &shader);
   
+  void take_screenshot(int iter);
   void load_shaders();
   void load_textures();
   
@@ -131,7 +132,7 @@ private:
   int screen_h;
 
   bool is_alive = true;
-
+  int iter = 0;
   Vector2i default_window_size = Vector2i(1024, 800);
 };
 

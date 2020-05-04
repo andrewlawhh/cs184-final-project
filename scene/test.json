@@ -1,32 +1,37 @@
 {
   "box": 
-    [{"point": [0, -0.2, 0],
+    [{"point": [0, -0.8, 0],
     "normal": [0, 1, 0],
     "friction": 0.0
   },
   {
-    "point": [0, 0, 0.75],
+    "point": [0, 0, 0.8],
     "normal": [0, 0, -1],
     "friction": 0.0
   },
   {
-    "point": [0, 0, -0.75],
+    "point": [0, 0, -0.8],
     "normal": [0, 0, 1],
     "friction": 0.0
   },
   {
-    "point": [0.75, 0, 0],
+    "point": [0.8, 0, 0],
     "normal": [-1, 0, 0],
     "friction": 0.0
   },
   {
-    "point": [-0.75, 0, 0],
+    "point": [-0.8, 0, 0],
     "normal": [1, 0, 0],
     "friction": 0.0
+  },
+  {
+    "point": [0, 2, 0],
+    "normal": [0, -1, 0],
+    "friction":0.0
   }
   ],
   "particles": {
-    "number": 6,
+    "number": 10,
     "origin": [0, 1.5, 0],
     "friction": 0,
     "solver_iterations": 4
