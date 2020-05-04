@@ -52,7 +52,9 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
                      vector<CollisionObject *> *collision_objects) {
 
   double mass = 1.0f;
-  double delta_t = 1.0f / frames_per_sec / simulation_steps;
+  //double delta_t = 1.0f / frames_per_sec / simulation_steps;
+  double delta_t = 0.0083;
+  //printf("%f", 1.0 / frames_per_sec / simulation_steps);
 
   /*
   Implement PositionBasedFluids paper algorithm
@@ -97,7 +99,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   for (Particle& p : particles) {
     p.velocity = (p.pos_temp - p.position) / delta_t;
     p.old_velocity = p.velocity;
-    // apply_vorticity_confinement(p, delta_t);
+    apply_vorticity_confinement(p, delta_t);
     p.velocity += get_viscosity_correction(p);
     p.position = p.pos_temp;
   }
@@ -123,34 +125,36 @@ void Cloth::build_neighbor_tree() {
                 std::unordered_map<float, vector<Particle*>*>::const_iterator res = map.find(hash);
                 if (res != map.end()) {
                     vector<Particle*>* close = map[hash];
-                    for (Particle* other : *close) {
-                        if (&p == other) {
-                            continue;
-                        }
-                        Vector3D displacement_vector = other->pos_temp - p.pos_temp;
-                        if (displacement_vector.norm() < NN_RADIUS) {
-                            p.neighbor_ptrs.push_back(other);
-                        }
+                    if (close != NULL) {
+                      for (Particle* other : *close) {
+                          if (&p == other) {
+                              continue;
+                          }
+                          Vector3D displacement_vector = other->pos_temp - p.pos_temp;
+                          if (displacement_vector.norm() < NN_RADIUS) {
+                              p.neighbor_ptrs.push_back(other);
+                          }
+                      }
                     }
                 }
             }
         }
     }
     
-    /*
-    // BRUTE FORCE
-    for (int j = 0; j < particles.size(); j++) {
-        Particle* other = &particles[j];
-        if (&p == other) {
-            continue;
-        }
-        Vector3D displacement_vector = other->pos_temp - p.pos_temp;
-        if (displacement_vector.norm() < NN_RADIUS) {
-            //printf("neighbor added for %d\n", i);
-            p.neighbor_ptrs.push_back(other);
-        }
-    } */
-  }
+  } 
+    // // BRUTE FORCE
+    // for (int j = 0; j < particles.size(); j++) {
+    //     Particle* other = &particles[j];
+    //     if (&p == other) {
+    //         continue;
+    //     }
+    //     Vector3D displacement_vector = other->pos_temp - p.pos_temp;
+    //     if (displacement_vector.norm() < NN_RADIUS) {
+    //         //printf("neighbor added for %d\n", i);
+    //         p.neighbor_ptrs.push_back(other);
+    //     }
+    // }
+  
 }
 
 void Cloth::build_spatial_map() {
@@ -165,7 +169,7 @@ void Cloth::build_spatial_map() {
     tuple<double, double, double> contained = contained_box(p.pos_temp);
     float hash = hash_tuple(contained);
 
-    std::unordered_map<float, vector<Particle*>*>::const_iterator res = map.find(hash);
+    auto res = map.find(hash);
     if (res == map.end()) {
       map[hash] = new vector<Particle*>();
     }
@@ -174,14 +178,10 @@ void Cloth::build_spatial_map() {
 
 }
 
-void Cloth::self_collide(PointMass &pm, double simulation_steps) {
-  // TODO (Part 4): Handle self-collision for a given point mass.
-
-}
-
 tuple<double, double, double> Cloth::contained_box(Vector3D pos) {
   // TODO (Part 4): Hash a 3D position into a unique float identifier that represents membership in some 3D box volume.
-
+  // double l = 3 * width / num_particles;
+  // return make_tuple(floor(pos.x / l), floor(pos.y / l), floor(pos.z / l));
     double new_x = pos.x - fmod(pos.x, box_dimension);
     double new_y = pos.y - fmod(pos.y, box_dimension);
     double new_z = pos.z - fmod(pos.z, box_dimension);
@@ -190,7 +190,7 @@ tuple<double, double, double> Cloth::contained_box(Vector3D pos) {
 }
 
 float Cloth::hash_tuple(tuple<double, double, double> t) {
-    return get<0>(t) + get<1>(t) * 31 + get<2>(t) * 31 * 31;
+  return (get<0>(t) * 223 + get<1>(t)) * 181 + get<2>(t);
 }
 
 ///////////////////////////////////////////////////////
@@ -294,14 +294,19 @@ void Cloth::apply_vorticity_confinement(Particle& p, double delta_t) {
     Vector3D spiky_result = spiky_gradient(p.pos_temp - neighbor_ptr->pos_temp);
     result_omega += cross(velocity_diff, spiky_result);
   }
-  Vector3D N = result_omega / result_omega.norm();
-  N.normalize();
+  Vector3D N = result_omega;// / result_omega.norm();
+  double N_norm = N.norm();
+  if (N_norm > 0.00001) {
+    N.x /= N_norm;
+    N.y /= N_norm;
+    N.z /= N_norm;
+  } 
   Vector3D corrective_force = cross(N, result_omega);
   p.velocity += delta_t * corrective_force;
 }
 
 Vector3D Cloth::get_viscosity_correction(const Particle& p) {
-  double c = 0.00005; // 0.01 suggested in paper
+  double c = 0.005; // 0.01 suggested in paper
   Vector3D retval = Vector3D(0);
   for (Particle* neighbor_ptr : p.neighbor_ptrs) {
     Vector3D velocity_diff = neighbor_ptr->old_velocity - p.old_velocity;

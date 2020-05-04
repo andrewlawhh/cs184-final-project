@@ -1,35 +1,44 @@
 {
   "box": 
-    [{"point": [0, -0.2, 0],
+    [{"point": [0, -0.8, 0],
     "normal": [0, 1, 0],
     "friction": 0.0
   },
   {
-    "point": [0, 0, 1],
+    "point": [0, 0, 0.8],
     "normal": [0, 0, -1],
     "friction": 0.0
   },
   {
-    "point": [0, 0, -1],
+    "point": [0, 0, -0.8],
     "normal": [0, 0, 1],
     "friction": 0.0
   },
   {
-    "point": [1, 0, 0],
+    "point": [0.8, 0, 0],
     "normal": [-1, 0, 0],
     "friction": 0.0
   },
   {
-    "point": [-1, 0, 0],
+    "point": [-0.8, 0, 0],
     "normal": [1, 0, 0],
     "friction": 0.0
+  },
+  {
+    "point": [0, 2, 0],
+    "normal": [0, -1, 0],
+    "friction":0.0
   }
   ],
   "particles": {
+<<<<<<< HEAD
     "number":4,
+=======
+    "number": 10,
+>>>>>>> 82cde0456be220bd13e94b23554b87dbdb15b5fc
     "origin": [0, 1.5, 0],
-    "friction": 0.3,
-    "solver_iterations": 5
+    "friction": 0,
+    "solver_iterations": 4
   },
   "cloth": {
     "damping": 0.2,
