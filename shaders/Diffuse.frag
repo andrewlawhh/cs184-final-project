@@ -11,7 +11,7 @@ uniform vec3 u_light_pos;
 uniform vec3 u_light_intensity;
 
 // We also get the uniform texture we want to use.
-uniform sampler2D u_texture_1;
+uniform sampler2D u_texture_3;
 
 // These are the inputs which are the outputs of the vertex shader.
 in vec4 v_position;
@@ -26,8 +26,17 @@ out vec4 out_color;
 
 void main() {
   // YOUR CODE HERE
-  
+  vec3 pos = vec3(v_position);
+  vec3 nor = vec3(v_normal);
+  vec3 light_dir = normalize(u_light_pos - pos);
+  float d = length(u_light_pos -pos);
+  float cos = max(0.0, dot(normalize(nor), light_dir));
+  vec3 temp = (u_light_intensity / (d*d)) * cos;
+
+
   // (Placeholder code. You will want to replace it.)
-  out_color = (vec4(1, 1, 1, 0) + v_normal) / 2;
-  out_color.a = 1;
+  //out_color = (vec4(1, 1, 1, 0) + v_normal) / 2;
+  //out_color.a = 1;
+
+  out_color = vec4(temp,  1);
 }
