@@ -21,7 +21,8 @@ out vec4 v_tangent;
 
 float h(vec2 uv) {
   // You may want to use this helper function...
-  return texture(u_texture_3, uv).x;
+  //return texture(u_texture_3, uv).x;
+  return 1;
 }
 
 void main() {
@@ -30,8 +31,10 @@ void main() {
   // (Placeholder code. You will want to replace it.)
   
 
-  vec4 change = in_normal * h(in_uv) * u_height_scaling;
-  vec4 np = in_position + change;
+  float scalar = 1 - abs(dot(vec4(0,0,1,0), in_normal));
+  vec4 otherchange = in_normal * u_normal_scaling;
+  vec4 change = in_normal * h(in_uv) * u_height_scaling * scalar;
+  vec4 np = in_position + change + otherchange;
   
   v_position = u_model * np;
 

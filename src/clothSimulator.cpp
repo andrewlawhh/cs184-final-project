@@ -319,7 +319,7 @@ void ClothSimulator::drawContents() {
 }
 
 void ClothSimulator::take_screenshot(int iter) {
-  int width = screen_w;
+  /*int width = screen_w;
   int height = screen_h;
   vector<unsigned char> windowPixels(4 * width * height);
   glReadPixels(0, 0,
@@ -345,45 +345,139 @@ void ClothSimulator::take_screenshot(int iter) {
   }
   fprintf(output_file, "\n");
   fclose(output_file); 
+  // output_file << endl;
+  // output_file.write((char*) flippedPixels.data(), flippedPixels.size()); 
+  // output_file.close();*/
 }
 
 void ClothSimulator::drawWireframe(GLShader &shader) {
+ //  int num_structural_springs =
+ //      2 * cloth->num_width_points * cloth->num_height_points -
+ //      cloth->num_width_points - cloth->num_height_points;
+ //  int num_shear_springs =
+ //      2 * (cloth->num_width_points - 1) * (cloth->num_height_points - 1);
+ //  int num_bending_springs = num_structural_springs - cloth->num_width_points -
+ //                            cloth->num_height_points;
 
+ //  int num_springs = cp->enable_structural_constraints * num_structural_springs +
+ //                    cp->enable_shearing_constraints * num_shear_springs +
+ //                    cp->enable_bending_constraints * num_bending_springs;
+
+ //  MatrixXf positions(4, num_springs * 2);
+ //  MatrixXf normals(4, num_springs * 2);
+
+ //  // Draw springs as lines
+
+ //  int si = 0;
+
+ //  for (int i = 0; i < cloth->springs.size(); i++) {
+ //    Spring s = cloth->springs[i];
+
+ //    if ((s.spring_type == STRUCTURAL && !cp->enable_structural_constraints) ||
+ //        (s.spring_type == SHEARING && !cp->enable_shearing_constraints) ||
+ //        (s.spring_type == BENDING && !cp->enable_bending_constraints)) {
+ //      continue;
+ //}
+
+ //    Vector3D pa = s.pm_a->position;
+ //    Vector3D pb = s.pm_b->position;
+
+ //    Vector3D na = s.pm_a->normal();
+ //    Vector3D nb = s.pm_b->normal();
+
+ //    positions.col(si) << pa.x, pa.y, pa.z, 1.0;
+ //    positions.col(si + 1) << pb.x, pb.y, pb.z, 1.0;
+
+ //    normals.col(si) << na.x, na.y, na.z, 0.0;
+ //    normals.col(si + 1) << nb.x, nb.y, nb.z, 0.0;
+
+ //    si += 2;
+ //  }
+
+ //  //shader.setUniform("u_color", nanogui::Color(1.0f, 1.0f, 1.0f, 1.0f), false);
+ //  shader.uploadAttrib("in_position", positions, false);
+ //  // Commented out: the wireframe shader does not have this attribute
+ //  //shader.uploadAttrib("in_normal", normals);
+
+ //  shader.drawArray(GL_LINES, 0, num_springs * 2);
 }
 
 void ClothSimulator::drawNormals(GLShader &shader) {
-  // int num_tris = cloth->clothMesh->triangles.size();
+  /* int num_tris = cloth->clothMesh->triangles.size();
 
-  // MatrixXf positions(4, num_tris * 3);
-  // MatrixXf normals(4, num_tris * 3);
+   MatrixXf positions(4, num_tris * 3);
+   MatrixXf normals(4, num_tris * 3);
 
-  // for (int i = 0; i < num_tris; i++) {
-  //   Triangle *tri = cloth->clothMesh->triangles[i];
+   for (int i = 0; i < num_tris; i++) {
+     Triangle *tri = cloth->clothMesh->triangles[i];
 
-  //   Vector3D p1 = tri->pm1->position;
-  //   Vector3D p2 = tri->pm2->position;
-  //   Vector3D p3 = tri->pm3->position;
+     Vector3D p1 = tri->pm1->position;
+     Vector3D p2 = tri->pm2->position;
+     Vector3D p3 = tri->pm3->position;
 
-  //   Vector3D n1 = tri->pm1->normal();
-  //   Vector3D n2 = tri->pm2->normal();
-  //   Vector3D n3 = tri->pm3->normal();
+     Vector3D n1 = tri->pm1->normal();
+     Vector3D n2 = tri->pm2->normal();
+     Vector3D n3 = tri->pm3->normal();
 
-  //   positions.col(i * 3) << p1.x, p1.y, p1.z, 1.0;
-  //   positions.col(i * 3 + 1) << p2.x, p2.y, p2.z, 1.0;
-  //   positions.col(i * 3 + 2) << p3.x, p3.y, p3.z, 1.0;
+     positions.col(i * 3) << p1.x, p1.y, p1.z, 1.0;
+     positions.col(i * 3 + 1) << p2.x, p2.y, p2.z, 1.0;
+     positions.col(i * 3 + 2) << p3.x, p3.y, p3.z, 1.0;
 
-  //   normals.col(i * 3) << n1.x, n1.y, n1.z, 0.0;
-  //   normals.col(i * 3 + 1) << n2.x, n2.y, n2.z, 0.0;
-  //   normals.col(i * 3 + 2) << n3.x, n3.y, n3.z, 0.0;
-  // }
+     normals.col(i * 3) << n1.x, n1.y, n1.z, 0.0;
+     normals.col(i * 3 + 1) << n2.x, n2.y, n2.z, 0.0;
+     normals.col(i * 3 + 2) << n3.x, n3.y, n3.z, 0.0;
+   }
 
-  // shader.uploadAttrib("in_position", positions, false);
-  // shader.uploadAttrib("in_normal", normals, false);
+   shader.uploadAttrib("in_position", positions, false);
+   shader.uploadAttrib("in_normal", normals, false);
 
-  // shader.drawArray(GL_TRIANGLES, 0, num_tris * 3);
+   void ClothSimulator::drawWireframe(GLShader & shader) {
+       shader.drawArray(GL_TRIANGLES, 0, num_tris * 3);*/
 }
 
 void ClothSimulator::drawPhong(GLShader &shader) {
+   /*int num_tris = cloth->clothMesh->triangles.size();
+
+   MatrixXf positions(4, num_tris * 3);
+   MatrixXf normals(4, num_tris * 3);
+   MatrixXf uvs(2, num_tris * 3);
+   MatrixXf tangents(4, num_tris * 3);
+
+   for (int i = 0; i < num_tris; i++) {
+     Triangle *tri = cloth->clothMesh->triangles[i];
+
+     Vector3D p1 = tri->pm1->position;
+     Vector3D p2 = tri->pm2->position;
+     Vector3D p3 = tri->pm3->position;
+
+     Vector3D n1 = tri->pm1->normal();
+     Vector3D n2 = tri->pm2->normal();
+     Vector3D n3 = tri->pm3->normal();
+
+     positions.col(i * 3    ) << p1.x, p1.y, p1.z, 1.0;
+     positions.col(i * 3 + 1) << p2.x, p2.y, p2.z, 1.0;
+     positions.col(i * 3 + 2) << p3.x, p3.y, p3.z, 1.0;
+
+     normals.col(i * 3    ) << n1.x, n1.y, n1.z, 0.0;
+     normals.col(i * 3 + 1) << n2.x, n2.y, n2.z, 0.0;
+     normals.col(i * 3 + 2) << n3.x, n3.y, n3.z, 0.0;
+    
+     uvs.col(i * 3    ) << tri->uv1.x, tri->uv1.y;
+     uvs.col(i * 3 + 1) << tri->uv2.x, tri->uv2.y;
+     uvs.col(i * 3 + 2) << tri->uv3.x, tri->uv3.y;
+    
+     tangents.col(i * 3    ) << 1.0, 0.0, 0.0, 1.0;
+     tangents.col(i * 3 + 1) << 1.0, 0.0, 0.0, 1.0;
+     tangents.col(i * 3 + 2) << 1.0, 0.0, 0.0, 1.0;
+   }
+
+
+   shader.uploadAttrib("in_position", positions, false);
+   shader.uploadAttrib("in_normal", normals, false);
+   shader.uploadAttrib("in_uv", uvs, false);
+   shader.uploadAttrib("in_tangent", tangents, false);
+
+   shader.drawArray(GL_TRIANGLES, 0, num_tris * 3);*/
 }
 
 // ----------------------------------------------------------------------------
@@ -569,236 +663,236 @@ bool ClothSimulator::resizeCallbackEvent(int width, int height) {
 void ClothSimulator::initGUI(Screen *screen) {
   Window *window;
   
-  // window = new Window(screen, "Simulation");
-  // window->setPosition(Vector2i(default_window_size(0) - 245, 15));
-  // window->setLayout(new GroupLayout(15, 6, 14, 5));
+   window = new Window(screen, "Simulation");
+   window->setPosition(Vector2i(default_window_size(0) - 245, 15));
+   window->setLayout(new GroupLayout(15, 6, 14, 5));
 
   // Spring types
 
-  // new Label(window, "Spring types", "sans-bold");
+   new Label(window, "Spring types", "sans-bold");
 
-  // {
-  //   Button *b = new Button(window, "structural");
-  //   b->setFlags(Button::ToggleButton);
-  //   b->setPushed(cp->enable_structural_constraints);
-  //   b->setFontSize(14);
-  //   b->setChangeCallback(
-  //       [this](bool state) { cp->enable_structural_constraints = state; });
+   {
+     Button *b = new Button(window, "structural");
+     b->setFlags(Button::ToggleButton);
+     b->setPushed(cp->enable_structural_constraints);
+     b->setFontSize(14);
+     b->setChangeCallback(
+         [this](bool state) { cp->enable_structural_constraints = state; });
 
-  //   b = new Button(window, "shearing");
-  //   b->setFlags(Button::ToggleButton);
-  //   b->setPushed(cp->enable_shearing_constraints);
-  //   b->setFontSize(14);
-  //   b->setChangeCallback(
-  //       [this](bool state) { cp->enable_shearing_constraints = state; });
+     b = new Button(window, "shearing");
+     b->setFlags(Button::ToggleButton);
+     b->setPushed(cp->enable_shearing_constraints);
+     b->setFontSize(14);
+     b->setChangeCallback(
+         [this](bool state) { cp->enable_shearing_constraints = state; });
 
-  //   b = new Button(window, "bending");
-  //   b->setFlags(Button::ToggleButton);
-  //   b->setPushed(cp->enable_bending_constraints);
-  //   b->setFontSize(14);
-  //   b->setChangeCallback(
-  //       [this](bool state) { cp->enable_bending_constraints = state; });
-  // }
+     b = new Button(window, "bending");
+     b->setFlags(Button::ToggleButton);
+     b->setPushed(cp->enable_bending_constraints);
+     b->setFontSize(14);
+     b->setChangeCallback(
+         [this](bool state) { cp->enable_bending_constraints = state; });
+   }
 
-  // Mass-spring parameters
+   //Mass-spring parameters
 
-  // new Label(window, "Parameters", "sans-bold");
+   new Label(window, "Parameters", "sans-bold");
 
-  // {
-  //   Widget *panel = new Widget(window);
-  //   GridLayout *layout =
-  //       new GridLayout(Orientation::Horizontal, 2, Alignment::Middle, 5, 5);
-  //   layout->setColAlignment({Alignment::Maximum, Alignment::Fill});
-  //   layout->setSpacing(0, 10);
-  //   panel->setLayout(layout);
+   {
+     Widget *panel = new Widget(window);
+     GridLayout *layout =
+         new GridLayout(Orientation::Horizontal, 2, Alignment::Middle, 5, 5);
+     layout->setColAlignment({Alignment::Maximum, Alignment::Fill});
+     layout->setSpacing(0, 10);
+     panel->setLayout(layout);
 
-  //   new Label(panel, "density :", "sans-bold");
+     new Label(panel, "density :", "sans-bold");
 
-  //   FloatBox<double> *fb = new FloatBox<double>(panel);
-  //   fb->setEditable(true);
-  //   fb->setFixedSize(Vector2i(100, 20));
-  //   fb->setFontSize(14);
-  //   fb->setValue(cp->density / 10);
-  //   fb->setUnits("g/cm^2");
-  //   fb->setSpinnable(true);
-  //   fb->setCallback([this](float value) { cp->density = (double)(value * 10); });
+     FloatBox<double> *fb = new FloatBox<double>(panel);
+     fb->setEditable(true);
+     fb->setFixedSize(Vector2i(100, 20));
+     fb->setFontSize(14);
+     fb->setValue(cp->density / 10);
+     fb->setUnits("g/cm^2");
+     fb->setSpinnable(true);
+     fb->setCallback([this](float value) { cp->density = (double)(value * 10); });
 
-  //   new Label(panel, "ks :", "sans-bold");
+     new Label(panel, "ks :", "sans-bold");
 
-  //   fb = new FloatBox<double>(panel);
-  //   fb->setEditable(true);
-  //   fb->setFixedSize(Vector2i(100, 20));
-  //   fb->setFontSize(14);
-  //   fb->setValue(cp->ks);
-  //   fb->setUnits("N/m");
-  //   fb->setSpinnable(true);
-  //   fb->setMinValue(0);
-  //   fb->setCallback([this](float value) { cp->ks = value; });
-  // }
+     fb = new FloatBox<double>(panel);
+     fb->setEditable(true);
+     fb->setFixedSize(Vector2i(100, 20));
+     fb->setFontSize(14);
+     fb->setValue(cp->ks);
+     fb->setUnits("N/m");
+     fb->setSpinnable(true);
+     fb->setMinValue(0);
+     fb->setCallback([this](float value) { cp->ks = value; });
+   }
 
-  // Simulation constants
+   //Simulation constants
 
-  // new Label(window, "Simulation", "sans-bold");
+   new Label(window, "Simulation", "sans-bold");
 
-  // {
-  //   Widget *panel = new Widget(window);
-  //   GridLayout *layout =
-  //       new GridLayout(Orientation::Horizontal, 2, Alignment::Middle, 5, 5);
-  //   layout->setColAlignment({Alignment::Maximum, Alignment::Fill});
-  //   layout->setSpacing(0, 10);
-  //   panel->setLayout(layout);
+   {
+     Widget *panel = new Widget(window);
+     GridLayout *layout =
+         new GridLayout(Orientation::Horizontal, 2, Alignment::Middle, 5, 5);
+     layout->setColAlignment({Alignment::Maximum, Alignment::Fill});
+     layout->setSpacing(0, 10);
+     panel->setLayout(layout);
 
-  //   new Label(panel, "frames/s :", "sans-bold");
+     new Label(panel, "frames/s :", "sans-bold");
 
-  //   IntBox<int> *fsec = new IntBox<int>(panel);
-  //   fsec->setEditable(true);
-  //   fsec->setFixedSize(Vector2i(100, 20));
-  //   fsec->setFontSize(14);
-  //   fsec->setValue(frames_per_sec);
-  //   fsec->setSpinnable(true);
-  //   fsec->setCallback([this](int value) { frames_per_sec = value; });
+     IntBox<int> *fsec = new IntBox<int>(panel);
+     fsec->setEditable(true);
+     fsec->setFixedSize(Vector2i(100, 20));
+     fsec->setFontSize(14);
+     fsec->setValue(frames_per_sec);
+     fsec->setSpinnable(true);
+     fsec->setCallback([this](int value) { frames_per_sec = value; });
 
-  //   new Label(panel, "steps/frame :", "sans-bold");
+     new Label(panel, "steps/frame :", "sans-bold");
 
-  //   IntBox<int> *num_steps = new IntBox<int>(panel);
-  //   num_steps->setEditable(true);
-  //   num_steps->setFixedSize(Vector2i(100, 20));
-  //   num_steps->setFontSize(14);
-  //   num_steps->setValue(simulation_steps);
-  //   num_steps->setSpinnable(true);
-  //   num_steps->setMinValue(0);
-  //   num_steps->setCallback([this](int value) { simulation_steps = value; });
-  // }
+     IntBox<int> *num_steps = new IntBox<int>(panel);
+     num_steps->setEditable(true);
+     num_steps->setFixedSize(Vector2i(100, 20));
+     num_steps->setFontSize(14);
+     num_steps->setValue(simulation_steps);
+     num_steps->setSpinnable(true);
+     num_steps->setMinValue(0);
+     num_steps->setCallback([this](int value) { simulation_steps = value; });
+   }
 
-  // Damping slider and textbox
+   //Damping slider and textbox
 
-  // new Label(window, "Damping", "sans-bold");
+   new Label(window, "Damping", "sans-bold");
 
-  // {
-  //   Widget *panel = new Widget(window);
-  //   panel->setLayout(
-  //       new BoxLayout(Orientation::Horizontal, Alignment::Middle, 0, 5));
+   {
+     Widget *panel = new Widget(window);
+     panel->setLayout(
+         new BoxLayout(Orientation::Horizontal, Alignment::Middle, 0, 5));
 
-  //   Slider *slider = new Slider(panel);
-  //   slider->setValue(cp->damping);
-  //   slider->setFixedWidth(105);
+     Slider *slider = new Slider(panel);
+     slider->setValue(cp->damping);
+     slider->setFixedWidth(105);
 
-  //   TextBox *percentage = new TextBox(panel);
-  //   percentage->setFixedWidth(75);
-  //   percentage->setValue(to_string(cp->damping));
-  //   percentage->setUnits("%");
-  //   percentage->setFontSize(14);
+     TextBox *percentage = new TextBox(panel);
+     percentage->setFixedWidth(75);
+     percentage->setValue(to_string(cp->damping));
+     percentage->setUnits("%");
+     percentage->setFontSize(14);
 
-  //   slider->setCallback([percentage](float value) {
-  //     percentage->setValue(std::to_string(value));
-  //   });
-  //   slider->setFinalCallback([&](float value) {
-  //     cp->damping = (double)value;
-  //     // cout << "Final slider value: " << (int)(value * 100) << endl;
-  //   });
-  // }
+     slider->setCallback([percentage](float value) {
+       percentage->setValue(std::to_string(value));
+     });
+     slider->setFinalCallback([&](float value) {
+       cp->damping = (double)value;
+       // cout << "Final slider value: " << (int)(value * 100) << endl;
+     });
+   }
 
-  // Gravity
+   //Gravity
 
-  // new Label(window, "Gravity", "sans-bold");
+   new Label(window, "Gravity", "sans-bold");
 
-  // {
-  //   Widget *panel = new Widget(window);
-  //   GridLayout *layout =
-  //       new GridLayout(Orientation::Horizontal, 2, Alignment::Middle, 5, 5);
-  //   layout->setColAlignment({Alignment::Maximum, Alignment::Fill});
-  //   layout->setSpacing(0, 10);
-  //   panel->setLayout(layout);
+   {
+     Widget *panel = new Widget(window);
+     GridLayout *layout =
+         new GridLayout(Orientation::Horizontal, 2, Alignment::Middle, 5, 5);
+     layout->setColAlignment({Alignment::Maximum, Alignment::Fill});
+     layout->setSpacing(0, 10);
+     panel->setLayout(layout);
 
-  //   new Label(panel, "x :", "sans-bold");
+     new Label(panel, "x :", "sans-bold");
 
-  //   FloatBox<double> *fb = new FloatBox<double>(panel);
-  //   fb->setEditable(true);
-  //   fb->setFixedSize(Vector2i(100, 20));
-  //   fb->setFontSize(14);
-  //   fb->setValue(gravity.x);
-  //   fb->setUnits("m/s^2");
-  //   fb->setSpinnable(true);
-  //   fb->setCallback([this](float value) { gravity.x = value; });
+     FloatBox<double> *fb = new FloatBox<double>(panel);
+     fb->setEditable(true);
+     fb->setFixedSize(Vector2i(100, 20));
+     fb->setFontSize(14);
+     fb->setValue(gravity.x);
+     fb->setUnits("m/s^2");
+     fb->setSpinnable(true);
+     fb->setCallback([this](float value) { gravity.x = value; });
 
-  //   new Label(panel, "y :", "sans-bold");
+     new Label(panel, "y :", "sans-bold");
 
-  //   fb = new FloatBox<double>(panel);
-  //   fb->setEditable(true);
-  //   fb->setFixedSize(Vector2i(100, 20));
-  //   fb->setFontSize(14);
-  //   fb->setValue(gravity.y);
-  //   fb->setUnits("m/s^2");
-  //   fb->setSpinnable(true);
-  //   fb->setCallback([this](float value) { gravity.y = value; });
+     fb = new FloatBox<double>(panel);
+     fb->setEditable(true);
+     fb->setFixedSize(Vector2i(100, 20));
+     fb->setFontSize(14);
+     fb->setValue(gravity.y);
+     fb->setUnits("m/s^2");
+     fb->setSpinnable(true);
+     fb->setCallback([this](float value) { gravity.y = value; });
 
-  //   new Label(panel, "z :", "sans-bold");
+     new Label(panel, "z :", "sans-bold");
 
-  //   fb = new FloatBox<double>(panel);
-  //   fb->setEditable(true);
-  //   fb->setFixedSize(Vector2i(100, 20));
-  //   fb->setFontSize(14);
-  //   fb->setValue(gravity.z);
-  //   fb->setUnits("m/s^2");
-  //   fb->setSpinnable(true);
-  //   fb->setCallback([this](float value) { gravity.z = value; });
-  // }
+     fb = new FloatBox<double>(panel);
+     fb->setEditable(true);
+     fb->setFixedSize(Vector2i(100, 20));
+     fb->setFontSize(14);
+     fb->setValue(gravity.z);
+     fb->setUnits("m/s^2");
+     fb->setSpinnable(true);
+     fb->setCallback([this](float value) { gravity.z = value; });
+   }
   
-  // window = new Window(screen, "Appearance");
-  // window->setPosition(Vector2i(15, 15));
-  // window->setLayout(new GroupLayout(15, 6, 14, 5));
+   window = new Window(screen, "Appearance");
+   window->setPosition(Vector2i(15, 15));
+   window->setLayout(new GroupLayout(15, 6, 14, 5));
 
-  // Appearance
+   //Appearance
 
-  // {
+   {
     
     
-  //   ComboBox *cb = new ComboBox(window, shaders_combobox_names);
-  //   cb->setFontSize(14);
-  //   cb->setCallback(
-  //       [this, screen](int idx) { active_shader_idx = idx; });
-  //   cb->setSelectedIndex(active_shader_idx);
-  // }
+     ComboBox *cb = new ComboBox(window, shaders_combobox_names);
+     cb->setFontSize(14);
+     cb->setCallback(
+         [this, screen](int idx) { active_shader_idx = idx; });
+     cb->setSelectedIndex(active_shader_idx);
+   }
 
-  // Shader Parameters
+   //Shader Parameters
 
-  // new Label(window, "Color", "sans-bold");
+   new Label(window, "Color", "sans-bold");
 
-  // {
-  //   ColorWheel *cw = new ColorWheel(window, color);
-  //   cw->setColor(this->color);
-  //   cw->setCallback(
-  //       [this](const nanogui::Color &color) { this->color = color; });
-  // }
+   {
+     ColorWheel *cw = new ColorWheel(window, color);
+     cw->setColor(this->color);
+     cw->setCallback(
+         [this](const nanogui::Color &color) { this->color = color; });
+   }
 
-  // new Label(window, "Parameters", "sans-bold");
+   new Label(window, "Parameters", "sans-bold");
 
-  // {
-  //   Widget *panel = new Widget(window);
-  //   GridLayout *layout =
-  //       new GridLayout(Orientation::Horizontal, 2, Alignment::Middle, 5, 5);
-  //   layout->setColAlignment({Alignment::Maximum, Alignment::Fill});
-  //   layout->setSpacing(0, 10);
-  //   panel->setLayout(layout);
+   {
+     Widget *panel = new Widget(window);
+     GridLayout *layout =
+         new GridLayout(Orientation::Horizontal, 2, Alignment::Middle, 5, 5);
+     layout->setColAlignment({Alignment::Maximum, Alignment::Fill});
+     layout->setSpacing(0, 10);
+     panel->setLayout(layout);
 
-  //   new Label(panel, "Normal :", "sans-bold");
+     new Label(panel, "Normal :", "sans-bold");
 
-  //   FloatBox<double> *fb = new FloatBox<double>(panel);
-  //   fb->setEditable(true);
-  //   fb->setFixedSize(Vector2i(100, 20));
-  //   fb->setFontSize(14);
-  //   fb->setValue(this->m_normal_scaling);
-  //   fb->setSpinnable(true);
-  //   fb->setCallback([this](float value) { this->m_normal_scaling = value; });
+     FloatBox<double> *fb = new FloatBox<double>(panel);
+     fb->setEditable(true);
+     fb->setFixedSize(Vector2i(100, 20));
+     fb->setFontSize(14);
+     fb->setValue(this->m_normal_scaling);
+     fb->setSpinnable(true);
+     fb->setCallback([this](float value) { this->m_normal_scaling = value; });
 
-  //   new Label(panel, "Height :", "sans-bold");
+     new Label(panel, "Height :", "sans-bold");
 
-  //   fb = new FloatBox<double>(panel);
-  //   fb->setEditable(true);
-  //   fb->setFixedSize(Vector2i(100, 20));
-  //   fb->setFontSize(14);
-  //   fb->setValue(this->m_height_scaling);
-  //   fb->setSpinnable(true);
-  //   fb->setCallback([this](float value) { this->m_height_scaling = value; });
-  // }
+     fb = new FloatBox<double>(panel);
+     fb->setEditable(true);
+     fb->setFixedSize(Vector2i(100, 20));
+     fb->setFontSize(14);
+     fb->setValue(this->m_height_scaling);
+     fb->setSpinnable(true);
+     fb->setCallback([this](float value) { this->m_height_scaling = value; });
+   }
 }
