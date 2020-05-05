@@ -99,8 +99,8 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   for (Particle& p : particles) {
     p.velocity = (p.pos_temp - p.position) / delta_t;
     p.old_velocity = p.velocity;
-    apply_vorticity_confinement(p, delta_t);
-    p.velocity += get_viscosity_correction(p);
+     apply_vorticity_confinement(p, delta_t);
+     p.velocity += get_viscosity_correction(p);
     p.position = p.pos_temp;
   }
 }
@@ -306,7 +306,7 @@ void Cloth::apply_vorticity_confinement(Particle& p, double delta_t) {
 }
 
 Vector3D Cloth::get_viscosity_correction(const Particle& p) {
-  double c = 0.005; // 0.01 suggested in paper
+  double c = 0.001; // 0.01 suggested in paper
   Vector3D retval = Vector3D(0);
   for (Particle* neighbor_ptr : p.neighbor_ptrs) {
     Vector3D velocity_diff = neighbor_ptr->old_velocity - p.old_velocity;

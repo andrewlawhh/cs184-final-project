@@ -314,8 +314,8 @@ void ClothSimulator::drawContents() {
     //printf("rendering particle\n");
     p.render(shader);
   }
-  if (!is_paused)
-    take_screenshot(iter++); 
+  // if (!is_paused)
+  //   take_screenshot(iter++); 
 }
 
 void ClothSimulator::take_screenshot(int iter) {
@@ -325,28 +325,18 @@ void ClothSimulator::take_screenshot(int iter) {
   glReadPixels(0, 0,
     width,
     height,
-    GL_RGBA,
+    GL_RGB,
     GL_UNSIGNED_BYTE,
     &windowPixels[0]);
-  
-  // for (int i = 0; i < windowPixels.size(); i++) {
-  //   printf("%x ", windowPixels[i]);
-  // }
 
-  vector<unsigned char> flippedPixels(4 * width * height);
+  vector<unsigned char> flippedPixels(3 * width * height);
   for (int row = 0; row < height; ++row)
-    memcpy(&flippedPixels[row * width * 4], &windowPixels[(height - row - 1) * width * 4], 4 * width);
+    memcpy(&flippedPixels[row * width * 3], &windowPixels[(height - row - 1) * width * 3], 3 * width);
 
-  time_t t = time(nullptr);
-  tm* lt = localtime(&t);
   stringstream ss;
   ss << "pixel_vals/" << iter << "_pixel_vals";
   string file = ss.str();
   cout << "Writing file " << file << "...\n";
-
-  // ofstream output_file(file, ios::binary | ios::out);
-  // output_file << screen_w << "\n";
-  // output_file << screen_h << "\n";
   FILE* output_file = fopen(file.c_str(), "w");
   fprintf(output_file, "%d\n", screen_w);
   fprintf(output_file, "%d\n", screen_h);
@@ -355,61 +345,10 @@ void ClothSimulator::take_screenshot(int iter) {
   }
   fprintf(output_file, "\n");
   fclose(output_file); 
-  // output_file << endl;
-  // output_file.write((char*) flippedPixels.data(), flippedPixels.size()); 
-  // output_file.close();
 }
 
 void ClothSimulator::drawWireframe(GLShader &shader) {
-//   int num_structural_springs =
-//       2 * cloth->num_width_points * cloth->num_height_points -
-//       cloth->num_width_points - cloth->num_height_points;
-//   int num_shear_springs =
-//       2 * (cloth->num_width_points - 1) * (cloth->num_height_points - 1);
-//   int num_bending_springs = num_structural_springs - cloth->num_width_points -
-//                             cloth->num_height_points;
 
-//   int num_springs = cp->enable_structural_constraints * num_structural_springs +
-//                     cp->enable_shearing_constraints * num_shear_springs +
-//                     cp->enable_bending_constraints * num_bending_springs;
-
-//   MatrixXf positions(4, num_springs * 2);
-//   MatrixXf normals(4, num_springs * 2);
-
-//   // Draw springs as lines
-
-//   int si = 0;
-
-//   for (int i = 0; i < cloth->springs.size(); i++) {
-//     Spring s = cloth->springs[i];
-
-//     if ((s.spring_type == STRUCTURAL && !cp->enable_structural_constraints) ||
-//         (s.spring_type == SHEARING && !cp->enable_shearing_constraints) ||
-//         (s.spring_type == BENDING && !cp->enable_bending_constraints)) {
-//       continue;
-// }
-
-//     Vector3D pa = s.pm_a->position;
-//     Vector3D pb = s.pm_b->position;
-
-//     Vector3D na = s.pm_a->normal();
-//     Vector3D nb = s.pm_b->normal();
-
-//     positions.col(si) << pa.x, pa.y, pa.z, 1.0;
-//     positions.col(si + 1) << pb.x, pb.y, pb.z, 1.0;
-
-//     normals.col(si) << na.x, na.y, na.z, 0.0;
-//     normals.col(si + 1) << nb.x, nb.y, nb.z, 0.0;
-
-//     si += 2;
-//   }
-
-//   //shader.setUniform("u_color", nanogui::Color(1.0f, 1.0f, 1.0f, 1.0f), false);
-//   shader.uploadAttrib("in_position", positions, false);
-//   // Commented out: the wireframe shader does not have this attribute
-//   //shader.uploadAttrib("in_normal", normals);
-
-//   shader.drawArray(GL_LINES, 0, num_springs * 2);
 }
 
 void ClothSimulator::drawNormals(GLShader &shader) {
@@ -445,48 +384,6 @@ void ClothSimulator::drawNormals(GLShader &shader) {
 }
 
 void ClothSimulator::drawPhong(GLShader &shader) {
-  // int num_tris = cloth->clothMesh->triangles.size();
-
-  // MatrixXf positions(4, num_tris * 3);
-  // MatrixXf normals(4, num_tris * 3);
-  // MatrixXf uvs(2, num_tris * 3);
-  // MatrixXf tangents(4, num_tris * 3);
-
-  // for (int i = 0; i < num_tris; i++) {
-  //   Triangle *tri = cloth->clothMesh->triangles[i];
-
-  //   Vector3D p1 = tri->pm1->position;
-  //   Vector3D p2 = tri->pm2->position;
-  //   Vector3D p3 = tri->pm3->position;
-
-  //   Vector3D n1 = tri->pm1->normal();
-  //   Vector3D n2 = tri->pm2->normal();
-  //   Vector3D n3 = tri->pm3->normal();
-
-  //   positions.col(i * 3    ) << p1.x, p1.y, p1.z, 1.0;
-  //   positions.col(i * 3 + 1) << p2.x, p2.y, p2.z, 1.0;
-  //   positions.col(i * 3 + 2) << p3.x, p3.y, p3.z, 1.0;
-
-  //   normals.col(i * 3    ) << n1.x, n1.y, n1.z, 0.0;
-  //   normals.col(i * 3 + 1) << n2.x, n2.y, n2.z, 0.0;
-  //   normals.col(i * 3 + 2) << n3.x, n3.y, n3.z, 0.0;
-    
-  //   uvs.col(i * 3    ) << tri->uv1.x, tri->uv1.y;
-  //   uvs.col(i * 3 + 1) << tri->uv2.x, tri->uv2.y;
-  //   uvs.col(i * 3 + 2) << tri->uv3.x, tri->uv3.y;
-    
-  //   tangents.col(i * 3    ) << 1.0, 0.0, 0.0, 1.0;
-  //   tangents.col(i * 3 + 1) << 1.0, 0.0, 0.0, 1.0;
-  //   tangents.col(i * 3 + 2) << 1.0, 0.0, 0.0, 1.0;
-  // }
-
-
-  // shader.uploadAttrib("in_position", positions, false);
-  // shader.uploadAttrib("in_normal", normals, false);
-  // shader.uploadAttrib("in_uv", uvs, false);
-  // shader.uploadAttrib("in_tangent", tangents, false);
-
-  // shader.drawArray(GL_TRIANGLES, 0, num_tris * 3);
 }
 
 // ----------------------------------------------------------------------------
