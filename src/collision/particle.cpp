@@ -17,6 +17,10 @@ void Particle::collide(Particle &p) {
   }
 }
 
+bool Particle::set_incline_direction(Particle& p) {
+    return false;
+}
+
 void Particle::render(GLShader &shader) {
   // We decrease the radius here so flat triangles don't behave strangely
   // and intersect with the sphere when rendered

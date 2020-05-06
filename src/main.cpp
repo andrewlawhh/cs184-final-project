@@ -262,9 +262,9 @@ bool loadObjectsFromFile(string filename, Cloth *cloth, ClothParameters *cp, vec
         incompleteObjectError("cloth", "ks");
       }
 
-      cp->enable_structural_constraints = enable_structural_constraints;
-      cp->enable_shearing_constraints = enable_shearing_constraints;
-      cp->enable_bending_constraints = enable_bending_constraints;
+      cp->enable_structural_constraints = true;
+      cp->enable_shearing_constraints = true;
+      cp->enable_bending_constraints = true;
       cp->density = density;
       cp->damping = damping;
       cp->ks = ks;
@@ -299,7 +299,11 @@ bool loadObjectsFromFile(string filename, Cloth *cloth, ClothParameters *cp, vec
     } else if (key == BOX) {
       for (auto face : object) {
         Vector3D point, normal;
+        Vector3D corner0, corner1, corner2, corner3;
+        Vector3D incline_direction;
+        double minX, maxX, minY, maxY, minZ, maxZ;
         double friction;
+        bool corners = false;
 
         auto it_point = face.find("point");
         if (it_point != face.end()) {
@@ -317,44 +321,128 @@ bool loadObjectsFromFile(string filename, Cloth *cloth, ClothParameters *cp, vec
           incompleteObjectError("plane", "normal");
         }
 
-        auto it_friction = face.find("friction");
-        if (it_friction != face.end()) {
-          friction = *it_friction;
-        } else {
-          incompleteObjectError("plane", "friction");
+        auto it_corner0 = face.find("corner0");
+        if (it_corner0 != face.end()) {
+            vector<double> vec_corner0 = *it_corner0;
+            corner0 = Vector3D(vec_corner0[0], vec_corner0[1], vec_corner0[2]);
+            corners = true;
         }
 
-        Plane *p = new Plane(point, normal, friction);
+        auto it_corner1 = face.find("corner1");
+        if (it_corner1 != face.end()) {
+            vector<double> vec_corner1 = *it_corner1;
+            corner1 = Vector3D(vec_corner1[0], vec_corner1[1], vec_corner1[2]);
+        } else if (corners) {
+            incompleteObjectError("plane", "corner1");
+        }
+
+        auto it_corner2 = face.find("corner2");
+        if (it_corner2 != face.end()) {
+            vector<double> vec_corner2 = *it_corner2;
+            corner2 = Vector3D(vec_corner2[0], vec_corner2[1], vec_corner2[2]);
+        } else if (corners) {
+            incompleteObjectError("plane", "corner2");
+        }
+
+        auto it_corner3 = face.find("corner3");
+        if (it_corner3 != face.end()) {
+            vector<double> vec_corner3 = *it_corner3;
+            corner3 = Vector3D(vec_corner3[0], vec_corner3[1], vec_corner3[2]);
+        } else if (corners) {
+            incompleteObjectError("plane", "corner3");
+        }
+
+        auto it_friction = face.find("friction");
+        if (it_friction != face.end()) {
+            friction = *it_friction;
+        }
+        else {
+            incompleteObjectError("plane", "friction");
+        }
+
+        Plane* p;
+        if (!corners) {
+            p = new Plane(point, normal, friction);
+        }
+        else {
+            p = new Plane(point, normal, corner0, corner1, corner2, corner3, friction);
+        }
+
+        auto it_incline_direction = face.find("incline_direction");
+        if (it_incline_direction != face.end()) {
+            vector<double> vec_incline_direction = *it_incline_direction;
+            p->incline_direction = Vector3D(vec_incline_direction[0], vec_incline_direction[1], vec_incline_direction[2]);
+            p->incline = true;
+        }
+
+        auto it_minX = face.find("minX");
+        if (it_minX != face.end()) {
+            p->minX = *it_minX;
+        }
+
+        auto it_maxX = face.find("maxX");
+        if (it_maxX != face.end()) {
+            p->maxX = *it_maxX;
+        }
+
+        auto it_minY = face.find("minY");
+        if (it_minY != face.end()) {
+            p->minY = *it_minY;
+        }
+
+        auto it_maxY = face.find("maxY");
+        if (it_maxY != face.end()) {
+            p->maxY = *it_maxY;
+        }
+
+        auto it_minZ = face.find("minZ");
+        if (it_minZ != face.end()) {
+            p->minZ = *it_minZ;
+        }
+
+        auto it_maxZ = face.find("maxZ");
+        if (it_maxZ != face.end()) {
+            p->maxZ = *it_maxZ;
+        }
+         
         objects->push_back(p);
       }
     } else if (key == PARTICLES) {
-      int num_particles;
-      auto it_num_particles = object.find("number");
-      if (it_num_particles != object.end()) {
-        num_particles = *it_num_particles;
-      } else {
-        incompleteObjectError("particles", "num particles");
+      vector<int> num_particles = vector<int>();
+      vector<Vector3D> center_particles = vector<Vector3D>();
+      for (auto face : object) {
+          auto it_num_particles = face.find("number");
+          if (it_num_particles != face.end()) {
+              num_particles.push_back(*it_num_particles);
+          }
+          else {
+              incompleteObjectError("particles", "num particles");
+          }
+          auto it_origin = face.find("origin");
+          if (it_origin != face.end()) {
+              vector<double> vec_origin = *it_origin;
+              center_particles.push_back(Vector3D(vec_origin[0], vec_origin[1], vec_origin[2]));
+          }
+          else {
+              incompleteObjectError("particles", "origin");
+          }
+          auto it_friction = face.find("friction");
+          if (it_friction != face.end()) {
+              cloth->particle_friction = *it_friction;
+          }
+          else {
+              incompleteObjectError("particles", "friction");
+          }
+          auto it_solver_iterations = face.find("solver_iterations");
+          if (it_solver_iterations != face.end()) {
+              cloth->solver_iterations = *it_solver_iterations;
+          }
+          else {
+              incompleteObjectError("particles", "solver_iterations");
+          }
       }
       cloth->num_particles = num_particles;
-      auto it_origin = object.find("origin");
-      if (it_origin != object.end()) {
-        vector<double> vec_origin = *it_origin;
-        cloth->center_particles = Vector3D(vec_origin[0], vec_origin[1], vec_origin[2]);
-      } else {
-        incompleteObjectError("particles", "origin");
-      }
-      auto it_friction = object.find("friction");
-      if (it_friction != object.end()) {
-        cloth->particle_friction = *it_friction;
-      } else {
-        incompleteObjectError("particles", "friction");
-      } 
-      auto it_solver_iterations = object.find("solver_iterations");
-      if (it_solver_iterations != object.end()) {
-        cloth->solver_iterations = *it_solver_iterations;
-      } else {
-        incompleteObjectError("particles", "solver_iterations");
-      }
+      cloth->center_particles = center_particles;
     } else { // PLANE
       Vector3D point, normal;
       double friction;
