@@ -12,9 +12,12 @@ struct Particle : public CollisionObject {
 public:
   Particle(const Vector3D &position, double radius, double friction, int num_lat = 40, int num_lon = 40)
       : start_position(position), position(position), last_position(position), radius(radius), radius2(radius*radius),
-        friction(friction), m_sphere_mesh(Misc::SphereMesh(num_lat, num_lon)) {}
+        friction(friction), m_sphere_mesh(Misc::SphereMesh(num_lat, num_lon)) {
+      on_incline_direction = Vector3D(0, 1, 0);
+  }
 
   void render(GLShader &shader);
+  bool set_incline_direction(Particle& p);
   void collide(Particle &p);
   
   Vector3D position;
@@ -34,6 +37,7 @@ public:
   Misc::SphereMesh m_sphere_mesh;
 
   int count;
+  Vector3D on_incline_direction;
 };
 
 #endif /* COLLISIONOBJECT_PARTICLE_H */

@@ -31,19 +31,26 @@ void Cloth::buildGrid() {
   double offset = 2 * radius;
   // num_particles for each axis
   // TODO - clean this up
-  for (int i = -num_particles/2; i < num_particles/2; i++) {
-    for (int j = -num_particles/2; j < num_particles/2; j++) {
-      for (int k = -num_particles/2; k < num_particles/2; k++) {
-        Vector3D particle_origin = Vector3D(center_particles[0] + i*INIT_OFFSET,
-                          center_particles[1] + j*INIT_OFFSET,
-                          center_particles[2] + k*INIT_OFFSET);
-        Particle p = Particle(particle_origin, PARTICLE_RADIUS, particle_friction);
-        particles.push_back(p);
+  for (int s = 0; s < num_particles.size(); s++) {
+      int num = num_particles[s];
+      Vector3D center = center_particles[s];
+      if (num == 1) {
+          Particle p = Particle(center, PARTICLE_RADIUS, particle_friction);
+          particles.push_back(p);
       }
-    }
+      for (int i = -num / 2; i < num / 2; i++) {
+          for (int j = -num / 2; j < num / 2; j++) {
+              for (int k = -num / 2; k < num / 2; k++) {
+                  Vector3D particle_origin = Vector3D(center[0] + i * INIT_OFFSET,
+                      center[1] + j * INIT_OFFSET,
+                      center[2] + k * INIT_OFFSET);
+                  Particle p = Particle(particle_origin, PARTICLE_RADIUS, particle_friction);
+                  particles.push_back(p);
+              }
+          }
+      }
   }
   printf("num particles generated - %lu\n", particles.size());
-  double dimension = (num_particles - 1) * NN_RADIUS + 2 * PARTICLE_RADIUS;
   box_dimension = NN_RADIUS;
 }
 
@@ -61,6 +68,7 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
   */
   for (Particle& p : particles) {
     for (Vector3D external_accel : external_accelerations) {
+      external_accel = dot(external_accel, p.on_incline_direction) * p.on_incline_direction;
       Vector3D external_force = mass * external_accel;
       p.velocity += delta_t * external_force;
     }
@@ -87,8 +95,15 @@ void Cloth::simulate(double frames_per_sec, double simulation_steps, ClothParame
     }
 
     for (Particle& p : particles) {
+      bool on_incline = false;
       for (CollisionObject* co : *collision_objects) {
+        if (co->incline) {
+            on_incline |= co->set_incline_direction(p);
+        }
         co->collide(p);
+      }
+      if (!on_incline) {
+          p.on_incline_direction = Vector3D(0, 1, 0);
       }
       for (Particle* neighbor_ptr : p.neighbor_ptrs) {
         neighbor_ptr->collide(p);
@@ -110,51 +125,50 @@ void Cloth::build_neighbor_tree() {
   neighbors_list.clear();
   neighbors_list.resize(particles.size());
   for (int i = 0; i < particles.size(); i++) {
-    Particle& p = particles[i];
-    p.neighbor_ptrs = vector<Particle*>();
+      Particle& p = particles[i];
+      p.neighbor_ptrs = vector<Particle*>();
 
-    tuple<double, double, double> contained = contained_box(p.pos_temp);
-    double x = get<0>(contained);
-    double y = get<1>(contained);
-    double z = get<2>(contained);
-    for (int diff_x = -1; diff_x <= 1; diff_x++) {
-        for (int diff_y = -1; diff_y <= 1; diff_y++) {
-            for (int diff_z = -1; diff_z <= 1; diff_z++) {
-                tuple<double, double, double> neighbor_box = make_tuple(x + diff_x * box_dimension, y + diff_y * box_dimension, z + diff_z * box_dimension);
-                float hash = hash_tuple(neighbor_box);
-                std::unordered_map<float, vector<Particle*>*>::const_iterator res = map.find(hash);
-                if (res != map.end()) {
-                    vector<Particle*>* close = map[hash];
-                    if (close != NULL) {
-                      for (Particle* other : *close) {
-                          if (&p == other) {
-                              continue;
+      tuple<double, double, double> contained = contained_box(p.pos_temp);
+      double x = get<0>(contained);
+      double y = get<1>(contained);
+      double z = get<2>(contained);
+        for (int diff_x = -1; diff_x <= 1; diff_x++) {
+            for (int diff_y = -1; diff_y <= 1; diff_y++) {
+                for (int diff_z = -1; diff_z <= 1; diff_z++) {
+                    tuple<double, double, double> neighbor_box = make_tuple(x + diff_x * box_dimension, y + diff_y * box_dimension, z + diff_z * box_dimension);
+                    float hash = hash_tuple(neighbor_box);
+                    std::unordered_map<float, vector<Particle*>*>::const_iterator res = map.find(hash);
+                    if (res != map.end()) {
+                        vector<Particle*>* close = map[hash];
+                        if (close != NULL) {
+                          for (Particle* other : *close) {
+                              if (&p == other) {
+                                  continue;
+                              }
+                              Vector3D displacement_vector = other->pos_temp - p.pos_temp;
+                              if (displacement_vector.norm() < NN_RADIUS) {
+                                  p.neighbor_ptrs.push_back(other);
+                              }
                           }
-                          Vector3D displacement_vector = other->pos_temp - p.pos_temp;
-                          if (displacement_vector.norm() < NN_RADIUS) {
-                              p.neighbor_ptrs.push_back(other);
-                          }
-                      }
+                        }
                     }
                 }
             }
         }
-    }
-    
-  } 
-    // // BRUTE FORCE
-    // for (int j = 0; j < particles.size(); j++) {
-    //     Particle* other = &particles[j];
-    //     if (&p == other) {
-    //         continue;
-    //     }
-    //     Vector3D displacement_vector = other->pos_temp - p.pos_temp;
-    //     if (displacement_vector.norm() < NN_RADIUS) {
-    //         //printf("neighbor added for %d\n", i);
-    //         p.neighbor_ptrs.push_back(other);
-    //     }
-    // }
-  
+        
+      // // BRUTE FORCE
+      //for (int j = 0; j < particles.size(); j++) {
+      //    Particle* other = &particles[j];
+      //    if (&p == other) {
+      //        continue;
+      //    }
+      //    Vector3D displacement_vector = other->pos_temp - p.pos_temp;
+      //    if (displacement_vector.norm() < NN_RADIUS) {
+      //        //printf("neighbor added for %d\n", i);
+      //        p.neighbor_ptrs.push_back(other);
+      //    }
+      //}
+  }
 }
 
 void Cloth::build_spatial_map() {
