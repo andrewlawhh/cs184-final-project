@@ -1,0 +1,140 @@
+# CS184 Final Project - Position Based Fluids Simulation
+
+## Abstract
+
+For our final project, we chose to implement the algorithm in the Position Based Fluids paper by Macklin and Muller. The main contribution of the paper is a method to simulate fluid behavior based on density constraints (incompressibility) as well as viscosity and vorticity constraints. They assert that their method "allows similar incompressibility and convergence to modern smoothed particle hydrodynamic (SPH) solvers, but inherits the stability of the geometric, position based dynamics method, allowing large time steps suitable for real-time applications."
+
+## Technical Approach
+
+We divided the project into 3 major parts:
+
+Part 1 focused on modifying the cloth simulation project to suit our purposes. 
+Part 2 focused on implementing the physics for the particles based on the Position Based Fluids paper.
+Part 3 focused on tweaking hyperparameters and using shaders and textures to make the simulation look better.
+
+### Part 1 - Skeleton Code
+
+The process of starting the project was probably one of the hardest parts. With such an open ended project, it was difficult for us to decide how to approach it. We decided that using the code from the cloth simulation class project might be the best way to proceed. In order to suit it for our purposes, we first identified the files needed to be modified. 
+
+In `main.cpp`, we recognized that the program was parsing the `json` files in `scene/`. Therefore, at first, we just reused the rendering code for the `Sphere` class from the cloth simulation project as the particles, and added a new statement to the big switch case in `main.cpp` to identify parameters for the particles. We also added a keyword called `box` to pass in parameters for the bounding box of the fluid.
+
+Like in the cloth simulation project, we store our particles as a vector owned by the `Cloth` class (which should be renamed to `Fluid`, or something more suitable to the project). This replaces the point mass vector that was previously used to represent the "particles" of the cloth. To get these to actually render on the GUI, we modify `drawContents` in `clothSimulator.cpp` to loop over the vector of particles and call each one of their `render` methods (which we borrowed from the `Sphere` class and then modified). I'm not sure if it is feasible to do here, but we could have used a `#pragma omp for` directive on this loop to make rendering faster. 
+
+The bulk of the coding was to be done in what used to be `cloth.cpp`. Here, the `simulate` function is where the physics happens. In project 4, we used verlet integration to calculate the position of the point masses in the next time step. In this project, we do something similar, but instead of verlet integration, we use the algorithm proposed in the Position Based Fluids paper.
+
+### Part 2 - Position Based Fluids Physics
+
+    // Physics functions
+    double poly6(Vector3D r);
+    Vector3D spiky_gradient(Vector3D r);
+    double get_particle_lambda(const Particle& p);
+    double C(const Particle& p);
+    Vector3D gradient_C(const Particle& p, const Particle& k);
+    Vector3D get_delta_p(const Particle& p);
+    double tensile_instability_correction(const Particle& p, const Particle& neighbor);
+    void apply_vorticity_confinement(Particle& p, double delta_t);
+    Vector3D get_viscosity_correction(const Particle& p);
+
+The above helper functions were used to implement the pseudocode provided by the Position Based Fluids paper, shown below.
+
+![](images/algorithm.png)
+
+The first step of the algorithm, as shown in the paper, is to calculate the new velocity based on external forces. In our case, the only external force we will be applying is gravity, at a constant -9.8 m/s<sup>2</sup> in the y direction. 
+
+    for (Particle& p : particles) {
+        for (Vector3D external_accel : external_accelerations) {
+        external_accel = dot(external_accel, p.on_incline_direction) * p.on_incline_direction;
+        Vector3D external_force = mass * external_accel;
+        p.velocity += delta_t * external_force;
+        }
+        p.last_position = p.position;
+        p.pos_temp = p.position + delta_t * p.velocity;
+    }
+
+Then, the paper suggests that we keep track of an x<sup>*</sup> for each particle that represents its position while it is going through the steps of the algorithm. We will refer to this value as `pos_temp`.
+
+The rest of the algorithm relies on knowing the "neighbors" of each particle. We define a "neighbor" as a particle x<sub>j</sub> that is within some distance *h* of the current particle x<sub>i</sub>. Whether i != j is a formal constraint is a detail that I believe is different from implementation to implementation. Our implementation enforces this constraint. A naive approach is to loop over the particle vector, calculating this distance test for each one. Unfortunately, this approach is quadratic in complexity and once the number of particles approaches even around 1000, the simulation becomes much too slow, as this calculation happens at ***every time step***. Thus, we implemented the spatial hashing that was also present in project 4. After calling `build_spatial_map` and `build_neighbor_map`, each particle in the simulation will have a field `neighbors`, which is a vector of pointers to particles that are close enough to it to be identified as a neighbor.
+
+The next step of the algorithm is to calculate the "incompressibility" constraint, which approximately enforces a specified density of the particles in relation to one another. This is captured in the following code snippet -
+
+    for (Particle& p : particles) {
+      p.lambda = get_particle_lambda(p);
+    }
+    for (Particle& p : particles) {
+      p.delta_p = get_delta_p(p);
+      p.pos_temp += p.delta_p;
+    }
+
+The reason that there are two separate for loops is that the get_delta_p function relies on the lambdas of the particles. Thus, it is necessary that all labmda values are calculated before we start calculating delta_p.
+
+The lines that come direclty afterwards enforce collision detection and are omitted for brevity.
+
+Lambda values are calculated as such
+
+![](images/lambda.png)
+
+The numerator is calculated as such 
+
+![](images/c.png)
+
+![](images/rho_i.png)
+
+The denominator is calculated as such
+
+![](images/del_c.png)
+
+rho0 is defined as the rest density of the fluid, and is a user specified parameter. More discussion on this in the next section.
+
+The W function and del W function are the poly6 and spiky kernel functions, respectively, and are implemented in `cloth.cpp`. 
+
+    // `W` kernel density function
+    // https://nccastaff.bournemouth.ac.uk/jmacey/MastersProjects/MSc15/06Burak/BurakErtekinMScThesis.pdf
+    double Cloth::poly6(Vector3D r) {
+    double h = NN_RADIUS;
+    double r_norm = r.norm();
+    if (r_norm < 0 || r_norm > h) {
+        return 0;
+    }
+    return (315 / 64 / PI / pow(h, 9)) * pow(h*h - r_norm*r_norm, 3);
+    }
+
+    // Spiky kernel for gradient calculation
+    // https://nccastaff.bournemouth.ac.uk/jmacey/MastersProjects/MSc15/06Burak/BurakErtekinMScThesis.pdf
+    Vector3D Cloth::spiky_gradient(Vector3D r) {
+    double h = NN_RADIUS;
+    double r_norm = r.norm();
+    if (r_norm == 0) {
+        r_norm = EPS_D;
+    }
+    if (r_norm < 0 || r_norm > h) {
+        return Vector3D(0);
+    }
+    return -(45 / PI / pow(h, 6)) * (r / r_norm) * pow(h - r_norm, 2);
+    }
+
+Once we have the lambda values for each particle using the methods above, we plug these into the delta_p formula to find the correction in position we need to apply to enforce the density constraint.
+
+![](delta_p.png)
+
+
+
+### Part 3 - Hyperparameters and Shaders
+
+Hyperparameters influence the behavior of the simulation tremendously. Changes in one parameter such as `rest_density` (rho_0 in the paper) or `epsilon` wildly affect the behavior of the particles. We tried many sets of different parameters, but eventually settled on parameters found on a Stanford website.
+
+    // https://graphics.stanford.edu/courses/cs348c/PA1_PBF2016/index.html
+    const double PARTICLE_RADIUS = 0.031;
+    const double NN_RADIUS = 0.1;
+    const double REST_DENSITY = 6378;
+    const double EPSILON = 600;
+    const double INIT_OFFSET = PARTICLE_RADIUS * 3;
+    const double VISCOSITY_CORRECTION = 0.001;
+
+
+## Results
+
+
+## References
+
+
+## Contributions

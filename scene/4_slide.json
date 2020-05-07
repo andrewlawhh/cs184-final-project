@@ -128,25 +128,25 @@
   ],
   "particles": [
     {
-      "number": 4,
+      "number": 6,
       "origin": [ 0, 2.5, 2 ],
       "friction": 0,
       "solver_iterations": 4
     },
     {
-      "number": 4,
+      "number": 6,
       "origin": [ 0, 2.5, -2 ],
       "friction": 0,
       "solver_iterations": 4
     },
     {
-      "number": 4,
+      "number": 6,
       "origin": [ 2, 2.5, 0 ],
       "friction": 0,
       "solver_iterations": 4
     },
     {
-      "number": 4,
+      "number": 6,
       "origin": [ -2, 2.5, 0 ],
       "friction": 0,
       "solver_iterations": 4

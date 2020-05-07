@@ -72,8 +72,8 @@ public:
       this->maxZ = numeric_limits<double>::infinity();
   }
   void render(GLShader &shader);
-  bool Plane::set_incline_direction(Particle& pm);
-  bool Plane::bounded(Particle& pm);
+  bool set_incline_direction(Particle& pm);
+  bool bounded(Particle& pm);
   void collide(Particle &p);
 
   Vector3D point;
