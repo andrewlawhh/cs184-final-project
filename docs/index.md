@@ -227,7 +227,7 @@ On our first attempt, our results were extremely lackluster and looked wrong. Ev
 
 3500 particles, mirror shader
 
-![](videos/gif/bubles.gif)
+![](videos/gif/bubbles.gif)
 
 Zoomed up close
 
