@@ -1,5 +1,9 @@
 # CS184 Final Project - Position Based Fluids Simulation
 
+Austin Cheng
+Andrew Law
+Merryle Wang
+
 ## Abstract
 
 For our final project, we chose to implement the algorithm in the Position Based Fluids paper by Macklin and Muller. The main contribution of the paper is a method to simulate fluid behavior based on density constraints (incompressibility) as well as viscosity and vorticity constraints. They assert that their method "allows similar incompressibility and convergence to modern smoothed particle hydrodynamic (SPH) solvers, but inherits the stability of the geometric, position based dynamics method, allowing large time steps suitable for real-time applications."
@@ -180,6 +184,25 @@ To further improve the looks of the simulation, we changed the rendering of the 
 
 ## Results
 
+On our first attempt, our results were extremely lackluster and looked wrong. Eventually, after playing with the hyperparameters, we realized that they were at fault, since our physics functions and algorithm seemed to be implemented correctly. After setting the parameters to what is described above, we got some realistic looking results.
+
+1000 particles, dampened (pre vorticity and viscosity adjustment)
+
+![](videos/gif/10_dampened.gif)
+
+4 slide scenario
+
+![](videos/gif/4_slides.gif)
+
+3500 particles
+
+<video src="videos/15.mp4" width="320" height="200" controls preload></video>
+
+3500 particles, mirror shader
+
+<video src="videos/bubbles.mp4" width="320" height="200" controls preload></video>
+
+I went through a lot of pain to get these videos because of my incompetence. At first, I tried to be fancy and take screenshots by dumping pixel values into a file, and then writing a python script to convert the values back to a png. After multiple hours of failure, I used my brain. Sometimes, simpler is better. I literally just recorded me hitting `P` on the simulation and called it a day. To do this, I wrote a bash script to take a screenshot every .05 seconds, and then stitched together the png files using ffmpeg.
 
 ## References
 
