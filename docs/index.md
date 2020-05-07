@@ -225,11 +225,11 @@ On our first attempt, our results were extremely lackluster and looked wrong. Ev
 
 ![](videos/gif/15.gif)
 
-3500 particles, mirror shader
+3500 particles, Stable Pseudo-Ellipsoid Splatting approach looking kind of bubbly
 
 ![](videos/gif/bubbles.gif)
 
-Zoomed up close
+Wild Pseudo-Ellipsoid Splatting approach giving us some nasty looking fluid
 
 ![](videos/gif/weirdfluid.gif)
 
