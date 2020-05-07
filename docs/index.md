@@ -4,6 +4,10 @@ Austin Cheng
 Andrew Law
 Merryle Wang
 
+Presentation: [https://docs.google.com/presentation/d/1Xu6rZYLJod7Ey0gSp6o-ytLsKdsCoOF4AfTCUzfLDQQ/edit?usp=sharing](https://docs.google.com/presentation/d/1Xu6rZYLJod7Ey0gSp6o-ytLsKdsCoOF4AfTCUzfLDQQ/edit?usp=sharing)
+
+Video: [https://youtu.be/7IadKhw_z_4](https://youtu.be/7IadKhw_z_4)
+
 ## Abstract
 
 For our final project, we chose to implement the algorithm in the Position Based Fluids paper by Macklin and Muller. The main contribution of the paper is a method to simulate fluid behavior based on density constraints (incompressibility) as well as viscosity and vorticity constraints. They assert that their method "allows similar incompressibility and convergence to modern smoothed particle hydrodynamic (SPH) solvers, but inherits the stability of the geometric, position based dynamics method, allowing large time steps suitable for real-time applications."
