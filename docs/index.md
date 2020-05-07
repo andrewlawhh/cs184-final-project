@@ -6,11 +6,15 @@ For our final project, we chose to implement the algorithm in the Position Based
 
 ## Technical Approach
 
-We divided the project into 3 major parts:
+We divided the project into 4 major parts:
 
 Part 1 focused on modifying the cloth simulation project to suit our purposes. 
+
 Part 2 focused on implementing the physics for the particles based on the Position Based Fluids paper.
-Part 3 focused on tweaking hyperparameters and using shaders and textures to make the simulation look better.
+
+Part 3 focused on tweaking hyperparameters to improve the simulation's realism
+
+Part 4 focused on using shaders and textures to make the simulation look better
 
 ### Part 1 - Skeleton Code
 
@@ -162,7 +166,7 @@ The final steps of the algorithm are to apply vorticity and viscosity confinemen
     return retval;
     }
 
-### Part 3 - Hyperparameters and Shaders
+### Part 3 - Hyperparameters
 
 Hyperparameters influence the behavior of the simulation tremendously. Changes in one parameter such as `rest_density` (rho_0 in the paper) or `epsilon` wildly affect the behavior of the particles. While experimenting with the parameters, we got extremeley strange behavior. If the viscosity and vorticity corrections were too high, the energy of the system would explode, and the fluid particles would move way too fast and rocket off the screen. This also could happen in the very first time step of the system if the `rest_density` parameter was too low. Another parameter we experimented with was the EPSILON parameter that is present in the denominator of the particle lambda equation. If it was too low compared to the density, we got behavior where the simulation did not at all resemble fluid and instead resembled some sort of jello. We tried many sets of different parameters, but eventually settled on parameters found on a Stanford website.
 
@@ -176,7 +180,30 @@ Hyperparameters influence the behavior of the simulation tremendously. Changes i
 
 These parameters gave satisfactory results that looked at least believable. Note that the viscosity correction is one order of magnitude smaller than what is suggested in the paper.
 
-To further improve the looks of the simulation, we changed the rendering of the particles to use a Mirror shader with a custom water texture found online.
+
+### Part 4 - Rendering fluids with Shaders
+We intended to render the fluids from the host of particles by following the technique that the paper followed: Ellipsoid Splatting. Unfortunately, we realized that the given the deadlines we had to meet and the existing codebase would make it very difficult to complete this task. After doing some research, it seemed that to render the fluid, we should have used Blender or Mitsuba to approach our project, not the project 4 starter code as the backbone of our code. In addition, the computing power of our computers was not enough to support a large amount of particles at a decent speed, which would severly reduce the realism even with the complete rendering. We decided to take a more experimental approach. Rather than follow existing methods and approaches for rendering the fluids from the particles that we already had, we decided to play around with the shaders in GLSL that were already integrated with our code base to try and approximate the ellipsoid splatting.
+
+After a lot of experimentation, this is one approach we ended up using. 
+
+- Finding a handsome water-esque texture online, we formatted it into a cube map to use along with the mirror shader.
+- Adding a displacement mapping to the particles, creating a more full effect by increasing the radius
+- Creating a more ellipsoid shape to replicate the ellipsoid splatting
+
+This was the most standard, stable approach. While it still didn't look like water, with certain parameter tuning, there were a decent bubbly looking liquid. 
+
+This is another more wild approach that we tried.
+
+- Applying the same texture using the mirror shader
+- Adding random 3d vector generator based off of a random 2d vector, and it takes in the world space position of the vertex as the input each time
+- Now each fragment in the shader has this random generally ellipsoid shape to it that changes with every time step. 
+- I had hoped that this could add some fluidly and fill the holes that were created by the individuals particles
+
+Here's the code for it:
+![](images/shader.JPG)
+
+In the end, none of the shading were implemented could replicate what the research paper did, but that was to be expected. The result certainly did look better than just the plain particles though.
+
 
 ## Results
 
@@ -191,8 +218,8 @@ To further improve the looks of the simulation, we changed the rendering of the 
 
 ## Contributions
 
-Andrew - Skeleton code rearchitecture, physics implementation
+Andrew - Skeleton code rearchitecture, physics implementation, generated videos with scripts
 
 Austin - Skeleton code rearchitecture, spatial mapping, slide scene creation
 
-Merryle - Spatial mapping, special shaders
+Merryle - Spatial mapping, special shaders for rendering fluids, parameter tuning
