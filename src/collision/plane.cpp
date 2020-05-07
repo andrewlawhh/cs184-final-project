@@ -50,28 +50,28 @@ bool Plane::bounded(Particle& pm) {
 }
 
 void Plane::render(GLShader &shader) {
-    nanogui::Color color(0.7f, 0.7f, 0.7f, 1.0f);
+    // nanogui::Color color(0.7f, 0.7f, 0.7f, 1.0f);
 
-    MatrixXf positions(3, 4);
-    MatrixXf normals(3, 4);
+    // MatrixXf positions(3, 4);
+    // MatrixXf normals(3, 4);
 
-    positions.col(0) << this->sCorner0;
-    positions.col(1) << this->sCorner1;
-    positions.col(2) << this->sCorner2;
-    positions.col(3) << this->sCorner3;
+    // positions.col(0) << this->sCorner0;
+    // positions.col(1) << this->sCorner1;
+    // positions.col(2) << this->sCorner2;
+    // positions.col(3) << this->sCorner3;
 
-    normals.col(0) << this->sNormal;
-    normals.col(1) << this->sNormal;
-    normals.col(2) << this->sNormal;
-    normals.col(3) << this->sNormal;
+    // normals.col(0) << this->sNormal;
+    // normals.col(1) << this->sNormal;
+    // normals.col(2) << this->sNormal;
+    // normals.col(3) << this->sNormal;
 
-    if (shader.uniform("u_color", false) != -1) {
-     shader.setUniform("u_color", nanogui::Color(10,10,10,0));
-    }
-    shader.uploadAttrib("in_position", positions);
-    if (shader.attrib("in_normal", false) != -1) {
-     shader.uploadAttrib("in_normal", normals);
-    }
+    // if (shader.uniform("u_color", false) != -1) {
+    //  shader.setUniform("u_color", nanogui::Color(10,10,10,0));
+    // }
+    // shader.uploadAttrib("in_position", positions);
+    // if (shader.attrib("in_normal", false) != -1) {
+    //  shader.uploadAttrib("in_normal", normals);
+    // }
 
-    shader.drawArray(GL_TRIANGLE_STRIP, 0, 4);
+    // shader.drawArray(GL_TRIANGLE_STRIP, 0, 4);
 }

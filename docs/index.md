@@ -116,11 +116,55 @@ Once we have the lambda values for each particle using the methods above, we plu
 
 ![](delta_p.png)
 
+One problem that appears after this position update is particle clumping, which occurs when particles don't have enough neighbors around themselves to satisfy the rest density. They overcompensate by coming way too close together. To combat this, the Position Based Fluids paper add a "tensile incompressibility constraint" to the delta_p function.
 
+    double Cloth::tensile_instability_correction(const Particle& p, const Particle& neighbor) {
+    double k = 0.1; // 0.1 suggested in the paper
+    int n = 4;      // suggested in the paper
+    Vector3D delta_q = Vector3D(0.11547) * NN_RADIUS; // magic number calculated using heuristic in the paper
+    double numerator = poly6(p.pos_temp - neighbor.pos_temp);
+    double denominator = poly6(delta_q);
+    return -k * pow(numerator / denominator, n);
+    }
+
+There are three configurable parameters in this function: `k`, `n`, and `delta_q`. I went with the parameters suggested in the paper. More on this in the next section.
+
+The final steps of the algorithm are to apply vorticity and viscosity confinements. This helps to offset the "additional damping which is often undesirable" introduced by position based methods.
+
+    void Cloth::apply_vorticity_confinement(Particle& p, double delta_t) {
+    // calculate w
+    Vector3D result_omega = Vector3D(0);
+    for (Particle* neighbor_ptr : p.neighbor_ptrs) {
+        Vector3D velocity_diff = neighbor_ptr->velocity - p.velocity;
+        Vector3D spiky_result = spiky_gradient(p.pos_temp - neighbor_ptr->pos_temp);
+        result_omega += cross(velocity_diff, spiky_result);
+    }
+    Vector3D N = result_omega;
+    double N_norm = N.norm();
+    if (N_norm > 0.00001) { // prevent division by 0
+        N.x /= N_norm;
+        N.y /= N_norm;
+        N.z /= N_norm;
+    } 
+    Vector3D corrective_force = cross(N, result_omega);
+    p.velocity += delta_t * corrective_force;
+    }
+
+    Vector3D Cloth::get_viscosity_correction(const Particle& p) {
+    double c = 0.001; // 0.01 suggested in paper
+    Vector3D retval = Vector3D(0);
+    for (Particle* neighbor_ptr : p.neighbor_ptrs) {
+        Vector3D velocity_diff = neighbor_ptr->old_velocity - p.old_velocity;
+        double poly6_result = poly6(p.pos_temp - neighbor_ptr->pos_temp);
+        retval += velocity_diff * poly6_result;
+    }
+    retval *= c;
+    return retval;
+    }
 
 ### Part 3 - Hyperparameters and Shaders
 
-Hyperparameters influence the behavior of the simulation tremendously. Changes in one parameter such as `rest_density` (rho_0 in the paper) or `epsilon` wildly affect the behavior of the particles. We tried many sets of different parameters, but eventually settled on parameters found on a Stanford website.
+Hyperparameters influence the behavior of the simulation tremendously. Changes in one parameter such as `rest_density` (rho_0 in the paper) or `epsilon` wildly affect the behavior of the particles. While experimenting with the parameters, we got extremeley strange behavior. If the viscosity and vorticity corrections were too high, the energy of the system would explode, and the fluid particles would move way too fast and rocket off the screen. This also could happen in the very first time step of the system if the `rest_density` parameter was too low. Another parameter we experimented with was the EPSILON parameter that is present in the denominator of the particle lambda equation. If it was too low compared to the density, we got behavior where the simulation did not at all resemble fluid and instead resembled some sort of jello. We tried many sets of different parameters, but eventually settled on parameters found on a Stanford website.
 
     // https://graphics.stanford.edu/courses/cs348c/PA1_PBF2016/index.html
     const double PARTICLE_RADIUS = 0.031;
@@ -130,11 +174,25 @@ Hyperparameters influence the behavior of the simulation tremendously. Changes i
     const double INIT_OFFSET = PARTICLE_RADIUS * 3;
     const double VISCOSITY_CORRECTION = 0.001;
 
+These parameters gave satisfactory results that looked at least believable. Note that the viscosity correction is one order of magnitude smaller than what is suggested in the paper.
+
+To further improve the looks of the simulation, we changed the rendering of the particles to use a Mirror shader with a custom water texture found online.
 
 ## Results
 
 
 ## References
 
+- [Position Based Fluids Paper (Macklin and Muller, NVIDIA)](https://mmacklin.com/pbf_sig_preprint.pdf)
+
+- [Stanford Course Parameters](https://graphics.stanford.edu/courses/cs348c/PA1_PBF2016/index.html)
+
+- [Poly6 and Spiky Gradient Functions](https://nccastaff.bournemouth.ac.uk/jmacey/MastersProjects/MSc15/06Burak/BurakErtekinMScThesis.pdf)
 
 ## Contributions
+
+Andrew - Skeleton code rearchitecture, physics implementation
+
+Austin - Skeleton code rearchitecture, spatial mapping, slide scene creation
+
+Merryle - Spatial mapping, special shaders
