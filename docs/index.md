@@ -223,11 +223,15 @@ On our first attempt, our results were extremely lackluster and looked wrong. Ev
 
 3500 particles
 
-<video src="videos/15.mp4" width="320" height="200" controls preload></video>
+![](videos/gif/15.gif)
 
 3500 particles, mirror shader
 
-<video src="videos/bubbles.mp4" width="320" height="200" controls preload></video>
+![](videos/gif/bubles.gif)
+
+Zoomed up close
+
+![](videos/gif/weirdfluid.gif)
 
 I went through a lot of pain to get these videos because of my incompetence. At first, I tried to be fancy and take screenshots by dumping pixel values into a file, and then writing a python script to convert the values back to a png. After multiple hours of failure, I used my brain. Sometimes, simpler is better. I literally just recorded me hitting `P` on the simulation and called it a day. To do this, I wrote a bash script to take a screenshot every .05 seconds, and then stitched together the png files using ffmpeg.
 
